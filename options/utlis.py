@@ -6,12 +6,12 @@ import matplotlib.dates as mdates
 import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
+import plotly.express as px
 import seaborn as sns
+from plotly.colors import sample_colorscale
 
 sns.set_theme(style="darkgrid", palette="muted", font="monospace", font_scale=1.0)
 warnings.filterwarnings("ignore", message=".*constrained_layout not applied.*")
-import plotly.express as px
-from plotly.colors import sample_colorscale
 
 
 def plot_option_matrix(opt, option_type="calls"):
