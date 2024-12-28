@@ -1,5 +1,8 @@
+from __future__ import annotations
+
 import pandas as pd
 import yfinance as yf
+
 
 class OptionPrices:
 
@@ -12,24 +15,18 @@ class OptionPrices:
         asset = yf.Ticker(self.ticker)
         self.expirations = asset.options
         self.call_chain = {
-            expiration: asset.option_chain(expiration).calls
-            for expiration in self.expirations
+            expiration: asset.option_chain(expiration).calls for expiration in self.expirations
         }
         self.put_chain = {
-            expiration: asset.option_chain(expiration).puts
-            for expiration in self.expirations
+            expiration: asset.option_chain(expiration).puts for expiration in self.expirations
         }
 
     def get_options(self, price_estimate="avg"):
         self.calls = self.construct_option_matrix(
-            self.call_chain,
-            option_type="call",
-            price_estimate=price_estimate
+            self.call_chain, option_type="call", price_estimate=price_estimate
         )
         self.puts = self.construct_option_matrix(
-            self.put_chain,
-            option_type="put",
-            price_estimate=price_estimate
+            self.put_chain, option_type="put", price_estimate=price_estimate
         )
 
     def construct_option_matrix(self, option_chain, option_type, price_estimate):
