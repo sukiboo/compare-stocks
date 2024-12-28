@@ -1,0 +1,45 @@
+repos:
+-   repo: https://github.com/pre-commit/pre-commit-hooks
+    rev: v3.2.0
+    hooks:
+    -   id: check-json
+    -   id: check-yaml
+    -   id: end-of-file-fixer
+    -   id: mixed-line-ending
+    -   id: trailing-whitespace
+
+-   repo: https://github.com/pre-commit/mirrors-mypy
+    rev: v1.11.2
+    hooks:
+    -   id: mypy
+        additional_dependencies: ['types-PyYAML']
+
+-   repo: https://github.com/PyCQA/isort
+    rev: 5.13.2
+    hooks:
+    -   id: isort
+        args: ["--profile", "black", "--filter-files", "--add-import", "from __future__ import annotations", "--combine-as"]
+
+-   repo: https://github.com/pycqa/flake8
+    rev: 7.1.1
+    hooks:
+    -   id: flake8
+        args: ["--ignore", "E501,F541", "--select", "F,E9,K1,W605"]
+
+-   repo: https://github.com/psf/black
+    rev: 24.8.0
+    hooks:
+    -   id: black
+        args: ["--line-length", "100"]
+
+-   repo: https://github.com/nbQA-dev/nbQA
+    rev: 1.9.0
+    hooks:
+    -   id: nbqa-mypy
+        args: ["--ignore-missing-imports"]
+    -   id: nbqa-isort
+        args: ["--profile=black", "--combine-as"]
+    -   id: nbqa-flake8
+        args: ["--ignore=E501,F541", "--select=F,E9,K1,W605"]
+    -   id: nbqa-black
+        args: ["--line-length=100"]
