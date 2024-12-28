@@ -5,10 +5,42 @@ import warnings
 import matplotlib.dates as mdates
 import matplotlib.pyplot as plt
 import numpy as np
+import pandas as pd
 import seaborn as sns
 
 sns.set_theme(style="darkgrid", palette="muted", font="monospace", font_scale=1.0)
 warnings.filterwarnings("ignore", message=".*constrained_layout not applied.*")
+import plotly.express as px
+from plotly.colors import sample_colorscale
+
+
+def plot_option_matrix(opt, option_type="calls"):
+    option_matrix = opt.calls if option_type == "calls" else opt.puts
+    cmap = "GnBu" if option_type == "calls" else "PuRd"
+    color_palette = sample_colorscale(
+        getattr(px.colors.sequential, cmap), np.linspace(0, 0.9, len(opt.expirations))
+    )
+
+    fig = px.scatter(
+        option_matrix,
+        x="optionPrice",
+        y="profitPrice",
+        color="expirationDate",
+        hover_data=["strikePrice", "contractSymbol"],
+        color_discrete_sequence=color_palette,
+    )
+
+    fig.update_traces(
+        marker={
+            "size": 15,
+            "line": {"width": 1, "color": "rgba(128, 128, 128, 0.5)"},
+            "symbol": "triangle-up" if option_type == "calls" else "triangle-down",
+            "opacity": 0.75,
+        },
+    )
+
+    fig.update_layout(title=f"{opt.ticker} {option_type} prices")
+    fig.show()
 
 
 def plot_option_matrix_3d(opt, option_type="calls", uniform_dates=True, bid_ask_spread=True):
@@ -33,12 +65,12 @@ def plot_option_matrix_3d(opt, option_type="calls", uniform_dates=True, bid_ask_
     for _, contract in option_matrix.iterrows():
         x = contract["strikePrice"]
         y = (
-            mdates.date2num(contract["expirationDate"])
+            mdates.date2num(pd.to_datetime(contract["expirationDate"]))
             if not uniform_dates
-            else opt.expirations.index(contract["expirationDate"].strftime("%Y-%m-%d"))
+            else opt.expirations.index(contract["expirationDate"])
         )
         z = contract["optionPrice"]
-        color = date_to_color[contract["expirationDate"].strftime("%Y-%m-%d")]
+        color = date_to_color[contract["expirationDate"]]
         alpha = get_opacity(contract["optionPrice"])
 
         # plot estimated contract price

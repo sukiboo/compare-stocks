@@ -33,7 +33,7 @@ class OptionPrices:
         option_matrix = []
         for expiration, option_series in option_chain.items():
             options = pd.DataFrame(option_series.contractSymbol)
-            options["expirationDate"] = pd.to_datetime(expiration)
+            options["expirationDate"] = expiration
             options["strikePrice"] = option_series.strike
             options["bidPrice"] = option_series.bid
             options["askPrice"] = option_series.ask
