@@ -10,15 +10,16 @@ class OptionPrices:
         self.ticker = ticker
         self.get_option_chains()
         self.get_options()
+        self.get_relative_prices()
 
     def get_option_chains(self):
-        asset = yf.Ticker(self.ticker)
-        self.expirations = asset.options
+        self.asset = yf.Ticker(self.ticker)
+        self.expirations = self.asset.options
         self.call_chain = {
-            expiration: asset.option_chain(expiration).calls for expiration in self.expirations
+            expiration: self.asset.option_chain(expiration).calls for expiration in self.expirations
         }
         self.put_chain = {
-            expiration: asset.option_chain(expiration).puts for expiration in self.expirations
+            expiration: self.asset.option_chain(expiration).puts for expiration in self.expirations
         }
 
     def get_options(self, price_estimate="avg"):
@@ -28,6 +29,11 @@ class OptionPrices:
         self.puts = self.construct_option_matrix(
             self.put_chain, option_type="put", price_estimate=price_estimate
         )
+
+    def get_relative_prices(self):
+        self.spotPrice = (self.asset.info["bid"] + self.asset.info["ask"]) / 2
+        self.calls["profitChange"] = (self.calls.profitPrice - self.spotPrice) / self.spotPrice
+        self.puts["profitChange"] = (self.puts.profitPrice - self.spotPrice) / self.spotPrice
 
     def construct_option_matrix(self, option_chain, option_type, price_estimate):
         option_matrix = []

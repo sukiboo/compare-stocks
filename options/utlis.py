@@ -14,17 +14,20 @@ sns.set_theme(style="darkgrid", palette="muted", font="monospace", font_scale=1.
 warnings.filterwarnings("ignore", message=".*constrained_layout not applied.*")
 
 
-def plot_option_matrix(opt, option_type="calls"):
+def plot_option_matrix(opt, option_type="calls", relative=False):
     option_matrix = opt.calls if option_type == "calls" else opt.puts
     cmap = "GnBu" if option_type == "calls" else "PuRd"
+
+    dates = np.array([pd.to_datetime(date).timestamp() for date in opt.expirations])
+    normalized_dates = (dates - dates.min()) / (dates.max() - dates.min())
     color_palette = sample_colorscale(
-        getattr(px.colors.sequential, cmap), np.linspace(0, 0.9, len(opt.expirations))
+        getattr(px.colors.sequential, cmap), np.log2(1 + normalized_dates**0.5)
     )
 
     fig = px.scatter(
         option_matrix,
         x="optionPrice",
-        y="profitPrice",
+        y="profitChange" if relative else "profitPrice",
         color="expirationDate",
         hover_data=["strikePrice", "contractSymbol"],
         color_discrete_sequence=color_palette,
