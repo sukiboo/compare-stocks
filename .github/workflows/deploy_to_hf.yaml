@@ -15,4 +15,4 @@ jobs:
       - name: Push to hub
         env:
           HF_TOKEN: ${{ secrets.HF_TOKEN }}
-        run: git push https://sukiboo:$HF_TOKEN@huggingface.co/spaces/sukiboo/compare-stocks main
+        run: git push https://sukiboo:$HF_TOKEN@huggingface.co/spaces/sukiboo/compare-stocks main --force
