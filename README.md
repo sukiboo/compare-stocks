@@ -3,9 +3,7 @@ title: Stock Prices Comparison Tool
 emoji: 📉🔍📈
 colorFrom: red
 colorTo: green
-sdk: python
-sdk_version: 3.10
-app_file: app.py
+sdk: docker
 pinned: false
 license: mit
 ---
