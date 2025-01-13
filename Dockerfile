@@ -13,10 +13,10 @@ RUN pip install --no-cache-dir -r requirements.txt
 COPY . .
 
 # Expose the default Spaces port
-ENV PORT 7860
+ENV PORT=7860
 
 # Use Gunicorn to run the Dash app with 2 workers, 2 threads
 # "app:app.server" means:
 #   - "app" = the name of your app.py file (without .py)
-#   - "server" = the underlying Flask server object in Dash
-CMD gunicorn app:server --workers 2 --threads 2 -b 0.0.0.0:$PORT
+#   - "app.server" = the underlying Flask server object in Dash
+CMD gunicorn app:app.server --workers 2 --threads 2 -b 0.0.0.0:$PORT
