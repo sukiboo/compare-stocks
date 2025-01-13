@@ -16,4 +16,4 @@ COPY . .
 ENV PORT 7860
 
 # Use Gunicorn to run the Dash app with 2 workers, 2 threads
-CMD gunicorn app:app.app.server --workers 2 --threads 2 -b 0.0.0.0:$PORT
+CMD gunicorn app:server --workers 2 --threads 2 -b 0.0.0.0:$PORT
