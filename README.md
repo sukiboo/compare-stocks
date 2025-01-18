@@ -1,8 +1,8 @@
 ---
 title: Stock Prices Comparison Tool
-emoji: 📉🔍📈
-colorFrom: red
-colorTo: green
+emoji: 📈🔍📉
+colorFrom: green
+colorTo: red
 sdk: docker
 pinned: false
 license: mit
