@@ -1,8 +1,11 @@
-import json
+import os
+
+from src.dash_app import create_app
+from src.prices import get_historical_prices
 
 if __name__ == "__main__":
-    """Execute the first code block of the app.ipynb notebook."""
-    with open("app.ipynb", "r") as notebook:
-        nb = json.load(notebook)
-    idxs = [idx for idx, cell in enumerate(nb["cells"]) if cell["cell_type"] == "code"]
-    exec("".join(nb["cells"][idxs[0]]["source"]))
+    tickers = ["AAPL", "MSFT", "GOOGL"]
+    df = get_historical_prices(tickers)
+
+    dash_app, server = create_app(df)
+    dash_app.run(debug=True, host="0.0.0.0", port=int(os.environ.get("PORT", 7860)))
