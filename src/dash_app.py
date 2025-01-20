@@ -149,13 +149,12 @@ class NormalizedAssetPricesApp:
 
     def setup_app(self):
         button_style = {
-            "backgroundColor": "#4CAF50",  # Green background
-            "color": "white",  # White text
-            "padding": "10px 20px",  # Padding
-            # "border": "none",              # No border
-            "borderRadius": "5px",  # Rounded corners
-            "cursor": "pointer",  # Pointer cursor on hover
-            "fontSize": "16px",  # Font size
+            "padding": "10px 20px",
+            "borderRadius": "10px",
+            "cursor": "pointer",
+            "fontFamily": "'Courier New', Courier, monospace",
+            "fontWeight": "bold",
+            "textAlign": "center",
         }
 
         self.app = Dash(__name__)
@@ -174,7 +173,7 @@ class NormalizedAssetPricesApp:
                         html.Button("1m", id="btn-1m", n_clicks=0, style=button_style),
                         html.Button("1w", id="btn-1w", n_clicks=0, style=button_style),
                     ],
-                    style={"marginTop": "10px"},
+                    style={"marginTop": "5px"},
                 ),
             ]
         )
@@ -215,10 +214,6 @@ class NormalizedAssetPricesApp:
         def update_figure_after_delay(
             relayout_data, n10y, n5y, n3y, n2y, n1y, n6m, n1m, n1w, current_figure
         ):
-            # date_range = self.get_date_range(current_figure["layout"])
-            # fig = self.plot_prices(date_range)
-            # return fig
-
             date_range = self.get_date_range(current_figure["layout"])
             triggered_id = ctx.triggered_id
             if triggered_id in [
@@ -237,6 +232,7 @@ class NormalizedAssetPricesApp:
             fig = self.plot_prices(date_range)
             return fig
 
+    # TODO: filter date_range=[None, None]
     def adjust_date_range(self, date_range, triggered_id):
         offsets = {
             "btn-10y": 10 * 365,
