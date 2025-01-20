@@ -1,9 +1,11 @@
 import itertools
+from datetime import timedelta
 
 import numpy as np
 import plotly.express as px
 import plotly.graph_objects as go
-from dash import Dash, Input, Output, State, dcc, html
+from dash import Dash, Input, Output, State, ctx, dcc, html
+from dateutil import parser  # type: ignore
 
 
 class NormalizedAssetPricesApp:
@@ -135,21 +137,45 @@ class NormalizedAssetPricesApp:
 
     def get_date_range(self, figure_layout):
         date_range = [None, None]
-        # Check xaxis2 first
+        # check xaxis2 first
         if "xaxis2" in figure_layout and figure_layout["xaxis2"].get("range"):
             date_range = figure_layout["xaxis2"]["range"]
-        # If not found, check xaxis1
+        # if not found, check xaxis1
         elif "xaxis1" in figure_layout and figure_layout["xaxis1"].get("range"):
             date_range = figure_layout["xaxis1"]["range"]
+        # else:
+        #     print(figure_layout)
         return date_range
 
     def setup_app(self):
-        self.app = Dash(__name__)
+        button_style = {
+            "backgroundColor": "#4CAF50",  # Green background
+            "color": "white",  # White text
+            "padding": "10px 20px",  # Padding
+            # "border": "none",              # No border
+            "borderRadius": "5px",  # Rounded corners
+            "cursor": "pointer",  # Pointer cursor on hover
+            "fontSize": "16px",  # Font size
+        }
 
+        self.app = Dash(__name__)
         self.app.layout = html.Div(
             [
                 dcc.Graph(id="plotly-normalized-asset-prices", figure=self.fig),
                 dcc.Store(id="debounced-relayout", data=None),
+                html.Div(
+                    [
+                        html.Button("10y", id="btn-10y", n_clicks=0, style=button_style),
+                        html.Button("5y", id="btn-5y", n_clicks=0, style=button_style),
+                        html.Button("3y", id="btn-3y", n_clicks=0, style=button_style),
+                        html.Button("2y", id="btn-2y", n_clicks=0, style=button_style),
+                        html.Button("1y", id="btn-1y", n_clicks=0, style=button_style),
+                        html.Button("6m", id="btn-6m", n_clicks=0, style=button_style),
+                        html.Button("1m", id="btn-1m", n_clicks=0, style=button_style),
+                        html.Button("1w", id="btn-1w", n_clicks=0, style=button_style),
+                    ],
+                    style={"marginTop": "10px"},
+                ),
             ]
         )
 
@@ -172,14 +198,62 @@ class NormalizedAssetPricesApp:
 
         @self.app.callback(
             Output("plotly-normalized-asset-prices", "figure"),
-            Input("debounced-relayout", "data"),
+            [
+                Input("debounced-relayout", "data"),
+                Input("btn-10y", "n_clicks"),
+                Input("btn-5y", "n_clicks"),
+                Input("btn-3y", "n_clicks"),
+                Input("btn-2y", "n_clicks"),
+                Input("btn-1y", "n_clicks"),
+                Input("btn-6m", "n_clicks"),
+                Input("btn-1m", "n_clicks"),
+                Input("btn-1w", "n_clicks"),
+            ],
             State("plotly-normalized-asset-prices", "figure"),
             prevent_initial_call=True,
         )
-        def update_figure_after_delay(relayout_data, current_figure):
+        def update_figure_after_delay(
+            relayout_data, n10y, n5y, n3y, n2y, n1y, n6m, n1m, n1w, current_figure
+        ):
+            # date_range = self.get_date_range(current_figure["layout"])
+            # fig = self.plot_prices(date_range)
+            # return fig
+
             date_range = self.get_date_range(current_figure["layout"])
+            triggered_id = ctx.triggered_id
+            if triggered_id in [
+                "btn-10y",
+                "btn-5y",
+                "btn-3y",
+                "btn-2y",
+                "btn-1y",
+                "btn-6m",
+                "btn-1m",
+                "btn-1w",
+            ]:
+                date_range = self.adjust_date_range(date_range, triggered_id)
+                print(date_range)
+
             fig = self.plot_prices(date_range)
             return fig
+
+    def adjust_date_range(self, date_range, triggered_id):
+        offsets = {
+            "btn-10y": 10 * 365,
+            "btn-5y": 5 * 365,
+            "btn-3y": 3 * 365,
+            "btn-2y": 2 * 365,
+            "btn-1y": 365,
+            "btn-6m": 182,
+            "btn-1m": 30,
+            "btn-1w": 7,
+        }
+        start_date, end_date = date_range
+        start_date = max(
+            parser.parse(end_date) - timedelta(days=offsets[triggered_id]),
+            self.timestamps[0],
+        ).strftime("%Y-%m-%d")
+        return [start_date, end_date]
 
     def run(self, **kwargs):
         self.app.run_server(**kwargs)
