@@ -1,0 +1,156 @@
+import itertools
+
+import plotly.express as px
+import plotly.graph_objects as go
+from dash import dcc, html
+
+from src.prices import get_available_tickers
+
+
+def setup_ticker_selection(initial_tickers):
+    available_tickers = get_available_tickers()
+    ticker_selection = dcc.Dropdown(
+        id="ticker-selection",
+        options=[{"label": ticker, "value": ticker.upper()} for ticker in available_tickers],
+        value=initial_tickers,
+        multi=True,
+        placeholder="Select tickers...",
+    )
+    return ticker_selection
+
+
+def setup_interval_buttons():
+    button_style = {
+        "padding": "10px 20px",
+        "borderRadius": "10px",
+        "cursor": "pointer",
+        "fontFamily": "'Courier New', Courier, monospace",
+        "fontWeight": "bold",
+        "textAlign": "center",
+    }
+    interval_buttons_html = html.Div(
+        [
+            html.Button("10y", id="btn-10y", n_clicks=0, style=button_style),
+            html.Button("5y", id="btn-5y", n_clicks=0, style=button_style),
+            html.Button("3y", id="btn-3y", n_clicks=0, style=button_style),
+            html.Button("2y", id="btn-2y", n_clicks=0, style=button_style),
+            html.Button("1y", id="btn-1y", n_clicks=0, style=button_style),
+            html.Button("6m", id="btn-6m", n_clicks=0, style=button_style),
+            html.Button("1m", id="btn-1m", n_clicks=0, style=button_style),
+            html.Button("1w", id="btn-1w", n_clicks=0, style=button_style),
+        ],
+        style={"marginTop": "5px"},
+    )
+    interval_buttons_ids = [
+        "btn-10y",
+        "btn-5y",
+        "btn-3y",
+        "btn-2y",
+        "btn-1y",
+        "btn-6m",
+        "btn-1m",
+        "btn-1w",
+    ]
+    interval_offsets = {
+        "btn-10y": 10 * 365,
+        "btn-5y": 5 * 365,
+        "btn-3y": 3 * 365,
+        "btn-2y": 2 * 365,
+        "btn-1y": 365,
+        "btn-6m": 182,
+        "btn-1m": 30,
+        "btn-1w": 7,
+    }
+    return interval_buttons_html, interval_buttons_ids, interval_offsets
+
+
+def plot_prices(timestamps, prices, prices_normalized, rolling_changes, date_range):
+    print(f"plot_prices: {date_range=}")
+    fig = go.Figure()
+
+    # rangeslider plot
+    colors = itertools.cycle(px.colors.qualitative.Set2)
+    for asset in prices.columns:
+        fig.add_trace(
+            go.Scatter(
+                x=timestamps,
+                y=rolling_changes[asset],
+                line=dict(color=next(colors)),
+                xaxis="x1",
+                yaxis="y1",
+                showlegend=False,
+            )
+        )
+
+    # main plot
+    colors = itertools.cycle(px.colors.qualitative.Set2)
+    for asset in prices_normalized.columns:
+        fig.add_trace(
+            go.Scatter(
+                x=timestamps,
+                y=prices_normalized[asset],
+                line=dict(width=3, color=next(colors)),
+                name=asset,
+                xaxis="x2",
+                yaxis="y2",
+            )
+        )
+
+    # dummy traces to show ticks on the right
+    for _ in prices_normalized.columns:
+        fig.add_trace(
+            go.Scatter(
+                x=[],
+                y=[],
+                xaxis="x2",
+                yaxis="y3",
+                showlegend=False,
+            )
+        )
+
+    # configure axes
+    xaxis1_dict = dict(rangeslider=dict(visible=True, thickness=0.1), tickangle=-30, nticks=20)
+    xaxis2_dict = dict(matches="x1", showticklabels=False)
+    if all(date_range):
+        xaxis1_dict["range"] = date_range
+        xaxis2_dict["range"] = date_range
+    yaxis1_dict = dict(showticklabels=False)
+    yaxis2_dict = dict(
+        title="relative price change",
+        nticks=12,
+        tickformat=".0f",
+        ticksuffix="%",
+        ticks="outside",
+    )
+    yaxis3_dict = dict(
+        matches="y2",
+        overlaying="y2",
+        side="right",
+        nticks=12,
+        tickformat=".0f",
+        ticksuffix="%",
+        ticks="outside",
+    )
+
+    fig.update_layout(
+        xaxis1=xaxis1_dict,
+        yaxis1=yaxis1_dict,
+        xaxis2=xaxis2_dict,
+        yaxis2=yaxis2_dict,
+        yaxis3=yaxis3_dict,
+        uirevision="constant",  # prevent resets from the xrange compression
+        font=dict(family="Courier New, Monospace", size=14, weight="bold"),
+        legend=dict(
+            title=dict(text="assets: "),
+            orientation="h",
+            x=0.0,
+            y=1.0,
+            xanchor="left",
+            yanchor="bottom",
+        ),
+        margin=dict(t=50, b=50),
+        template="plotly",
+        height=600,
+    )
+
+    return fig
