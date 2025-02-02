@@ -1,3 +1,9 @@
+from datetime import timedelta
+
+import numpy as np
+from dateutil import parser  # type: ignore
+
+
 def date_to_idx_range(timestamps, date_range):
     idx_range = (
         timestamps.get_indexer(date_range, method="nearest").tolist()
@@ -18,3 +24,19 @@ def get_date_range(figure_layout):
     # else:
     #     print(figure_layout)
     return date_range
+
+
+def adjust_date_range(timestamps, interval_offsets, date_range, button_id):
+    start_date, end_date = date_range
+    start_date = max(
+        parser.parse(end_date) - timedelta(days=interval_offsets[button_id]),
+        timestamps[0],
+    ).strftime("%Y-%m-%d")
+    return [start_date, end_date]
+
+
+def normalize_prices(prices, date_range):
+    date0, date1 = date_range
+    prices_normalized = np.nan * prices
+    prices_normalized.loc[date0:date1] = prices[date0:date1] / prices.loc[date0] - 1
+    return prices_normalized

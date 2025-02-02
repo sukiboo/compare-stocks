@@ -5,6 +5,7 @@ import plotly.graph_objects as go
 from dash import dcc, html
 
 from src.prices import get_available_tickers
+from src.utils import normalize_prices
 
 
 def setup_ticker_selection(initial_tickers):
@@ -64,8 +65,11 @@ def setup_interval_buttons():
     return interval_buttons_html, interval_buttons_ids, interval_offsets
 
 
-def plot_prices(timestamps, prices, prices_normalized, rolling_changes, date_range):
-    print(f"plot_prices: {date_range=}")
+def plot_prices(timestamps, prices, rolling_changes, idx_range):
+    idx0, idx1 = idx_range
+    date_range = [timestamps[idx0], timestamps[idx1]]
+    prices_normalized = normalize_prices(prices, date_range)
+
     fig = go.Figure()
 
     # rangeslider plot
@@ -88,7 +92,7 @@ def plot_prices(timestamps, prices, prices_normalized, rolling_changes, date_ran
         fig.add_trace(
             go.Scatter(
                 x=timestamps,
-                y=prices_normalized[asset],
+                y=100 * prices_normalized[asset],
                 line=dict(width=3, color=next(colors)),
                 name=asset,
                 xaxis="x2",
@@ -111,11 +115,11 @@ def plot_prices(timestamps, prices, prices_normalized, rolling_changes, date_ran
     # configure axes
     xaxis1_dict = dict(rangeslider=dict(visible=True, thickness=0.1), tickangle=-30, nticks=20)
     xaxis2_dict = dict(matches="x1", showticklabels=False)
-    if all(date_range):
-        xaxis1_dict["range"] = date_range
-        xaxis2_dict["range"] = date_range
+    xaxis1_dict["range"] = date_range
+    xaxis2_dict["range"] = date_range
     yaxis1_dict = dict(showticklabels=False)
     yaxis2_dict = dict(
+        autorange=True,
         title="relative price change",
         nticks=12,
         tickformat=".0f",

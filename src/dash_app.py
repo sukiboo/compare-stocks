@@ -1,8 +1,4 @@
-from datetime import timedelta
-
-import numpy as np
 from dash import Dash, Input, Output, State, ctx, dcc, html
-from dateutil import parser  # type: ignore
 
 from src.prices import get_historical_prices
 from src.style_elements import (
@@ -10,13 +6,13 @@ from src.style_elements import (
     setup_interval_buttons,
     setup_ticker_selection,
 )
-from src.utils import date_to_idx_range, get_date_range
+from src.utils import adjust_date_range, date_to_idx_range, get_date_range
 
 
 class NormalizedAssetPricesApp:
 
-    # TODO: add initial interval
-    def __init__(self, initial_tickers=["AAPL", "GOOGL", "MSFT"]):
+    # TODO: add initial interval via self.idx_range
+    def __init__(self, initial_tickers=["AAPL", "GOOGL", "MSFT"], initial_interval="1y"):
 
         self.setup_env(initial_tickers)
 
@@ -34,31 +30,18 @@ class NormalizedAssetPricesApp:
         self.rolling_changes = self.percentage_changes.rolling(window=251, min_periods=1).sum()
         self.timestamps = self.prices.index
         self.idx_range = [0, -1]
-        self.normalize_prices()
-        # TODO: this is horrible, pls fix
-        self.fig = plot_prices(
-            self.timestamps, self.prices, self.prices_normalized, self.rolling_changes, [None, None]
-        )
 
-    def normalize_prices(self):
-        idx0, idx1 = self.idx_range
-        date0, date1 = self.timestamps[idx0], self.timestamps[idx1]
-        price = self.prices.loc[date0]
-        self.prices_normalized = np.nan * self.prices
-        self.prices_normalized.loc[date0:date1] = 100 * (self.prices[date0:date1] / price - 1)
+        self.fig = plot_prices(self.timestamps, self.prices, self.rolling_changes, self.idx_range)
 
     def update_figure(self, date_range=[None, None]):
         idx_range = date_to_idx_range(self.timestamps, date_range)
-        # do not update the figure if the range is unchanged
         if idx_range != self.idx_range:
             self.idx_range = idx_range
-            self.normalize_prices()
             self.fig = plot_prices(
                 self.timestamps,
                 self.prices,
-                self.prices_normalized,
                 self.rolling_changes,
-                date_range,
+                idx_range,
             )
         return self.fig
 
@@ -107,21 +90,13 @@ class NormalizedAssetPricesApp:
             date_range = get_date_range(current_figure["layout"])
             triggered_id = ctx.triggered_id
             if triggered_id in self.interval_buttons_ids:
-                date_range = self.adjust_date_range(date_range, triggered_id)
-                print(date_range)
+                date_range = adjust_date_range(
+                    self.timestamps, self.interval_offsets, date_range, triggered_id
+                )
+                print(f"interval update: {date_range=}")
 
             fig = self.update_figure(date_range)
             return fig
-
-    # TODO: filter date_range=[None, None]
-    # UPD: might have fixed it by setting the initial idx range to [0, -1]
-    def adjust_date_range(self, date_range, button_id):
-        start_date, end_date = date_range
-        start_date = max(
-            parser.parse(end_date) - timedelta(days=self.interval_offsets[button_id]),
-            self.timestamps[0],
-        ).strftime("%Y-%m-%d")
-        return [start_date, end_date]
 
     def run(self, **kwargs):
         self.app.run_server(**kwargs)
