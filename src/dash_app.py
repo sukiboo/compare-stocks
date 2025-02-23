@@ -12,9 +12,7 @@ from src.utils import adjust_date_range, date_to_idx_range, get_date_range
 class NormalizedAssetPricesApp:
 
     def __init__(self, initial_tickers=["AAPL", "GOOGL", "MSFT"], initial_interval_days=365):
-
         self.setup_env(initial_tickers, initial_interval_days)
-
         self.interval_buttons_html, self.interval_buttons_ids, self.interval_offsets = (
             setup_interval_buttons()
         )

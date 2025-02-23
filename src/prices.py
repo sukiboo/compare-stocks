@@ -17,6 +17,7 @@ def get_historical_prices(tickers):
             tickers,
             interval="1d",
             period="max",
+            auto_adjust=False,
             progress=False,
         )
         .Close.bfill()
