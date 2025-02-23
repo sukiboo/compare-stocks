@@ -9,6 +9,8 @@ from src.style_elements import (
 from src.utils import adjust_date_range, date_to_idx_range, get_date_range
 
 
+# TODO: allow ~8 tickers at most
+# TODO: make price retrieval one at a time
 class NormalizedAssetPricesApp:
 
     def __init__(self, initial_tickers=["AAPL", "GOOGL", "MSFT"], initial_interval_days=365):
@@ -19,9 +21,9 @@ class NormalizedAssetPricesApp:
         self.ticker_selection = setup_ticker_selection(initial_tickers)
         self.setup_app()
 
+    # TODO: move price retrieval to prices and make it a class
     def setup_env(self, initial_tickers, initial_interval_days):
         prices = get_historical_prices(initial_tickers)
-
         self.prices = prices / prices.iloc[0]
         self.percentage_changes = (self.prices / (self.prices.shift(1) + 1e-7) - 1).fillna(0)
         self.rolling_changes = self.percentage_changes.rolling(window=251, min_periods=1).sum()
@@ -30,7 +32,6 @@ class NormalizedAssetPricesApp:
             self.timestamps,
             adjust_date_range(self.timestamps, initial_interval_days),
         )
-
         self.fig = plot_prices(self.timestamps, self.prices, self.rolling_changes, self.idx_range)
 
     def update_figure(self, date_range=[None, None]):
@@ -86,7 +87,16 @@ class NormalizedAssetPricesApp:
         def update_figure_after_delay(
             relayout_data, tickers, n10y, n5y, n3y, n2y, n1y, n6m, n1m, n1w, current_figure
         ):
+
+            # TODO: handle the ticker selection
             print(f"Selected tickers: {', '.join(tickers) if tickers else 'None'}")
+            # prices = get_historical_prices(tickers)
+            # self.prices = prices / prices.iloc[0]
+            # self.percentage_changes = (self.prices / (self.prices.shift(1) + 1e-7) - 1).fillna(0)
+            # self.rolling_changes = self.percentage_changes.rolling(window=251, min_periods=1).sum()
+            # self.timestamps = self.prices.index
+            # TODO: fix the price retrieval above
+
             date_range = get_date_range(current_figure["layout"])
             triggered_id = ctx.triggered_id
             if triggered_id in self.interval_buttons_ids:
