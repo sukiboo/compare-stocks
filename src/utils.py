@@ -26,10 +26,14 @@ def get_date_range(figure_layout):
     return date_range
 
 
-def adjust_date_range(timestamps, interval_offsets, date_range, button_id):
-    start_date, end_date = date_range
+def adjust_date_range(timestamps, offset_days, date_range=None):
+    if not date_range:
+        start_date = timestamps[0].strftime("%Y-%m-%d")
+        end_date = timestamps[-1].strftime("%Y-%m-%d")
+    else:
+        start_date, end_date = date_range
     start_date = max(
-        parser.parse(end_date) - timedelta(days=interval_offsets[button_id]),
+        parser.parse(end_date) - timedelta(days=offset_days),
         timestamps[0],
     ).strftime("%Y-%m-%d")
     return [start_date, end_date]
