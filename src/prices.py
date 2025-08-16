@@ -1,10 +1,14 @@
+from datetime import date
+
 import yfinance as yf
 
 
 class Prices:
     """Retrieve historical prices and compute relevant metrics."""
 
-    def __init__(self, initial_tickers):
+    def __init__(self, initial_tickers, date_start):
+        self.tickers = initial_tickers
+        self.date_range = (date_start, date.today().strftime("%Y-%m-%d"))
         self.prices_raw = self.get_historical_prices(initial_tickers)
         self.prices_normalized = self.prices_raw / self.prices_raw.iloc[0]
         self.percentage_changes = (
@@ -17,7 +21,8 @@ class Prices:
             yf.download(
                 tickers,
                 interval="1d",
-                period="max",
+                start=self.date_range[0],
+                end=self.date_range[1],
                 auto_adjust=False,
                 progress=False,
             )

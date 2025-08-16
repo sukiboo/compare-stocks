@@ -13,16 +13,21 @@ from src.utils import adjust_date_range, date_to_idx_range, get_date_range
 # TODO: make price retrieval one at a time
 class NormalizedAssetPricesApp:
 
-    def __init__(self, initial_tickers=["AAPL", "GOOGL", "MSFT"], initial_interval_days=365):
-        self.setup_env(initial_tickers, initial_interval_days)
+    def __init__(
+        self,
+        initial_tickers=["AAPL", "GOOGL", "MSFT"],
+        date_start="2000-01-01",
+        initial_interval_days=365,
+    ):
+        self.setup_env(initial_tickers, date_start, initial_interval_days)
         self.interval_buttons_html, self.interval_buttons_ids, self.interval_offsets = (
             setup_interval_buttons()
         )
         self.ticker_selection = setup_ticker_selection(initial_tickers)
         self.setup_app()
 
-    def setup_env(self, initial_tickers, initial_interval_days):
-        self.prices = Prices(initial_tickers)
+    def setup_env(self, initial_tickers, date_start, initial_interval_days):
+        self.prices = Prices(initial_tickers, date_start)
         self.timestamps = self.prices.prices_normalized.index
         self.idx_range = date_to_idx_range(
             self.timestamps,
