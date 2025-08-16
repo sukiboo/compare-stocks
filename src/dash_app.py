@@ -1,6 +1,6 @@
 from dash import Dash, Input, Output, State, ctx, dcc, html
 
-from src.prices import get_historical_prices
+from src.prices import Prices
 from src.style_elements import (
     plot_prices,
     setup_interval_buttons,
@@ -21,18 +21,19 @@ class NormalizedAssetPricesApp:
         self.ticker_selection = setup_ticker_selection(initial_tickers)
         self.setup_app()
 
-    # TODO: move price retrieval to prices and make it a class
     def setup_env(self, initial_tickers, initial_interval_days):
-        prices = get_historical_prices(initial_tickers)
-        self.prices = prices / prices.iloc[0]
-        self.percentage_changes = (self.prices / (self.prices.shift(1) + 1e-7) - 1).fillna(0)
-        self.rolling_changes = self.percentage_changes.rolling(window=251, min_periods=1).sum()
-        self.timestamps = self.prices.index
+        self.prices = Prices(initial_tickers)
+        self.timestamps = self.prices.prices_normalized.index
         self.idx_range = date_to_idx_range(
             self.timestamps,
             adjust_date_range(self.timestamps, initial_interval_days),
         )
-        self.fig = plot_prices(self.timestamps, self.prices, self.rolling_changes, self.idx_range)
+        self.fig = plot_prices(
+            self.timestamps,
+            self.prices.prices_normalized,
+            self.prices.rolling_changes,
+            self.idx_range,
+        )
 
     def update_figure(self, date_range=[None, None]):
         idx_range = date_to_idx_range(self.timestamps, date_range)
@@ -40,8 +41,8 @@ class NormalizedAssetPricesApp:
             self.idx_range = idx_range
             self.fig = plot_prices(
                 self.timestamps,
-                self.prices,
-                self.rolling_changes,
+                self.prices.prices_normalized,
+                self.prices.rolling_changes,
                 idx_range,
             )
         return self.fig

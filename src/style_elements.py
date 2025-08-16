@@ -4,8 +4,7 @@ import plotly.express as px
 import plotly.graph_objects as go
 from dash import dcc, html
 
-from src.prices import get_available_tickers
-from src.utils import normalize_prices
+from src.utils import get_available_tickers, normalize_prices
 
 
 def setup_ticker_selection(initial_tickers):
