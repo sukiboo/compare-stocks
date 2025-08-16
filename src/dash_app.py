@@ -91,7 +91,7 @@ class NormalizedAssetPricesApp:
             prevent_initial_call=True,
         )
         def update_figure_after_delay(
-            relayout_data, tickers, n10y, n5y, n3y, n2y, n1y, n6m, n1m, n1w, current_figure
+            relayout_data, tickers, n10y, n5y, n3y, n2y, n1y, n6m, n1m, current_figure
         ):
 
             # TODO: handle the ticker selection

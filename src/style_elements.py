@@ -37,7 +37,6 @@ def setup_interval_buttons():
             html.Button("1y", id="btn-1y", n_clicks=0, style=button_style),
             html.Button("6m", id="btn-6m", n_clicks=0, style=button_style),
             html.Button("1m", id="btn-1m", n_clicks=0, style=button_style),
-            html.Button("1w", id="btn-1w", n_clicks=0, style=button_style),
         ],
         style={"marginTop": "5px"},
     )
@@ -49,7 +48,6 @@ def setup_interval_buttons():
         "btn-1y",
         "btn-6m",
         "btn-1m",
-        "btn-1w",
     ]
     interval_offsets = {
         "btn-10y": 10 * 365,
@@ -59,7 +57,6 @@ def setup_interval_buttons():
         "btn-1y": 365,
         "btn-6m": 182,
         "btn-1m": 30,
-        "btn-1w": 7,
     }
     return interval_buttons_html, interval_buttons_ids, interval_offsets
 
