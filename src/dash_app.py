@@ -40,16 +40,28 @@ class NormalizedAssetPricesApp:
             self.idx_range,
         )
 
-    def update_figure(self, date_range=[None, None]):
+    def update_figure(self, tickers, date_range=[None, None]):
+        tickers_updated, range_updated = False, False
+
+        if set(tickers) != self.prices.tickers:
+            self.prices.update_tickers(tickers)
+            tickers_updated = True
+            print(f"tickers update: {', '.join(tickers)}")
+
         idx_range = date_to_idx_range(self.timestamps, date_range)
         if idx_range != self.idx_range:
             self.idx_range = idx_range
+            range_updated = True
+            print(f"interval update: {date_range=}")
+
+        if tickers_updated or range_updated:
             self.fig = plot_prices(
                 self.timestamps,
                 self.prices.prices_normalized,
                 self.prices.rolling_changes,
                 idx_range,
             )
+
         return self.fig
 
     def setup_app(self):
@@ -93,25 +105,13 @@ class NormalizedAssetPricesApp:
         def update_figure_after_delay(
             relayout_data, tickers, n10y, n5y, n3y, n2y, n1y, n6m, n1m, current_figure
         ):
-
-            # TODO: handle the ticker selection
-            print(f"Selected tickers: {', '.join(tickers) if tickers else 'None'}")
-            # prices = get_historical_prices(tickers)
-            # self.prices = prices / prices.iloc[0]
-            # self.percentage_changes = (self.prices / (self.prices.shift(1) + 1e-7) - 1).fillna(0)
-            # self.rolling_changes = self.percentage_changes.rolling(window=251, min_periods=1).sum()
-            # self.timestamps = self.prices.index
-            # TODO: fix the price retrieval above
-
             date_range = get_date_range(current_figure["layout"])
             triggered_id = ctx.triggered_id
             if triggered_id in self.interval_buttons_ids:
                 date_range = adjust_date_range(
                     self.timestamps, self.interval_offsets[triggered_id], date_range
                 )
-                print(f"interval update: {date_range=}")
-
-            fig = self.update_figure(date_range)
+            fig = self.update_figure(tickers, date_range)
             return fig
 
     def run(self, **kwargs):
