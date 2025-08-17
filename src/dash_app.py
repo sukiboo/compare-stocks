@@ -9,13 +9,11 @@ from src.style_elements import (
 from src.utils import adjust_date_range, date_to_idx_range, get_date_range
 
 
-# TODO: allow ~8 tickers at most
-# TODO: make price retrieval one at a time
 class NormalizedAssetPricesApp:
 
     def __init__(
         self,
-        initial_tickers=["AAPL", "GOOGL", "MSFT"],
+        initial_tickers=["QQQ", "SPY", "VTI", "VT"],
         date_start="2000-01-01",
         initial_interval_days=365,
     ):
@@ -28,7 +26,7 @@ class NormalizedAssetPricesApp:
 
     def setup_env(self, initial_tickers, date_start, initial_interval_days):
         self.prices = Prices(initial_tickers, date_start)
-        self.timestamps = self.prices.prices_normalized.index
+        self.timestamps = self.prices.date_range
         self.idx_range = date_to_idx_range(
             self.timestamps,
             adjust_date_range(self.timestamps, initial_interval_days),
@@ -46,7 +44,7 @@ class NormalizedAssetPricesApp:
         if set(tickers) != self.prices.tickers:
             self.prices.update_tickers(tickers)
             tickers_updated = True
-            print(f"tickers update: {', '.join(tickers)}")
+            print(f"tickers update: {', '.join(tickers) if tickers else 'None'}")
 
         idx_range = date_to_idx_range(self.timestamps, date_range)
         if idx_range != self.idx_range:

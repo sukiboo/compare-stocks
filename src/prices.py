@@ -9,14 +9,8 @@ class Prices:
 
     def __init__(self, initial_tickers, date_start):
         self.tickers = set(initial_tickers)
-        # self.date_range = (date_start, date.today().strftime("%Y-%m-%d"))
         self.date_range = pd.date_range(start=date_start, end=date.today(), freq="B")
-        self.prices_raw = self.get_historical_prices(initial_tickers)
-        self.prices_normalized = self.prices_raw / self.prices_raw.iloc[0]
-        self.percentage_changes = (
-            self.prices_normalized / (self.prices_normalized.shift(1) + 1e-7) - 1
-        ).fillna(0)
-        self.rolling_changes = self.percentage_changes.rolling(window=251, min_periods=1).sum()
+        self.retrieve_prices(initial_tickers)
 
     def __str__(self):
         return f"Prices(tickers={self.tickers})"
@@ -31,13 +25,20 @@ class Prices:
                 auto_adjust=False,
                 progress=False,
             )
-            .Close.reindex(self.date_range)
+            .Close.reindex(index=self.date_range, columns=tickers)
             .bfill()
             .ffill()
         )
         return df
 
-    # TODO: what happens if tickers are empty?
+    def retrieve_prices(self, tickers):
+        self.prices_raw = self.get_historical_prices(tickers)
+        self.prices_normalized = self.prices_raw / self.prices_raw.iloc[0]
+        self.percentage_changes = (
+            self.prices_normalized / (self.prices_normalized.shift(1) + 1e-7) - 1
+        ).fillna(0)
+        self.rolling_changes = self.percentage_changes.rolling(window=251, min_periods=1).sum()
+
     def update_tickers(self, tickers):
         selected_tickers = set(tickers)
         for ticker in self.tickers - selected_tickers:
