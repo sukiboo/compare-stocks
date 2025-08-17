@@ -1,5 +1,6 @@
 from dash import Dash, Input, Output, State, ctx, dcc, html
 
+from src.constants import APP_DATE_START, APP_INITIAL_INTERVAL_DAYS, APP_INITIAL_TICKERS
 from src.prices import Prices
 from src.style_elements import (
     plot_prices,
@@ -13,9 +14,9 @@ class NormalizedAssetPricesApp:
 
     def __init__(
         self,
-        initial_tickers=["QQQ", "SPY", "VTI", "VT"],
-        date_start="2000-01-01",
-        initial_interval_days=365,
+        initial_tickers=APP_INITIAL_TICKERS,
+        date_start=APP_DATE_START,
+        initial_interval_days=APP_INITIAL_INTERVAL_DAYS,
     ):
         self.setup_env(initial_tickers, date_start, initial_interval_days)
         self.interval_buttons_html, self.interval_buttons_ids, self.interval_offsets = (

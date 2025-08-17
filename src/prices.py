@@ -3,6 +3,13 @@ from datetime import date
 import pandas as pd
 import yfinance as yf
 
+from src.constants import (
+    PRICES_EPS,
+    PRICES_RETRIEVAL_INTERVAL,
+    PRICES_ROLLING_MIN_PERIOD,
+    PRICES_ROLLING_WINDOW,
+)
+
 
 class Prices:
     """Retrieve historical prices and compute relevant metrics."""
@@ -19,25 +26,27 @@ class Prices:
         df = (
             yf.download(
                 tickers,
-                interval="1d",
+                interval=PRICES_RETRIEVAL_INTERVAL,
                 start=self.date_range[0],
                 end=self.date_range[-1],
                 auto_adjust=False,
                 progress=False,
             )
-            .Close.reindex(index=self.date_range, columns=tickers)
+            .Close.reindex(index=self.date_range)
             .bfill()
             .ffill()
         )
         return df
 
     def retrieve_prices(self, tickers):
-        self.prices_raw = self.get_historical_prices(tickers)
+        self.prices_raw = self.get_historical_prices(tickers).reindex(columns=tickers)
         self.prices_normalized = self.prices_raw / self.prices_raw.iloc[0]
         self.percentage_changes = (
-            self.prices_normalized / (self.prices_normalized.shift(1) + 1e-7) - 1
+            self.prices_normalized / (self.prices_normalized.shift(1) + PRICES_EPS) - 1
         ).fillna(0)
-        self.rolling_changes = self.percentage_changes.rolling(window=251, min_periods=1).sum()
+        self.rolling_changes = self.percentage_changes.rolling(
+            window=PRICES_ROLLING_WINDOW, min_periods=PRICES_ROLLING_MIN_PERIOD
+        ).sum()
 
     def update_tickers(self, tickers):
         selected_tickers = set(tickers)
@@ -62,8 +71,11 @@ class Prices:
         self.prices_raw[ticker] = ticker_df
         self.prices_normalized[ticker] = ticker_df / ticker_df.iloc[0]
         self.percentage_changes[ticker] = (
-            self.prices_normalized[ticker] / (self.prices_normalized[ticker].shift(1) + 1e-7) - 1
+            self.prices_normalized[ticker] / (self.prices_normalized[ticker].shift(1) + PRICES_EPS)
+            - 1
         ).fillna(0)
         self.rolling_changes[ticker] = (
-            self.percentage_changes[ticker].rolling(window=251, min_periods=1)
-        ).sum()
+            self.percentage_changes[ticker]
+            .rolling(window=PRICES_ROLLING_WINDOW, min_periods=PRICES_ROLLING_MIN_PERIOD)
+            .sum()
+        )
