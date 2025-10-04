@@ -15,7 +15,7 @@ class Prices:
     """Retrieve historical prices and compute relevant metrics."""
 
     def __init__(self, initial_tickers, date_start):
-        self.tickers = set(initial_tickers)
+        self.tickers = list(initial_tickers)
         self.date_range = pd.date_range(start=date_start, end=date.today(), freq="B")
         self.retrieve_prices(initial_tickers)
 
@@ -49,11 +49,13 @@ class Prices:
         ).sum()
 
     def update_tickers(self, tickers):
-        selected_tickers = set(tickers)
-        for ticker in self.tickers - selected_tickers:
-            self.remove_ticker(ticker)
-        for ticker in selected_tickers - self.tickers:
-            self.add_ticker(ticker)
+        selected_tickers = list(tickers)
+        for ticker in self.tickers[:]:
+            if ticker not in selected_tickers:
+                self.remove_ticker(ticker)
+        for ticker in selected_tickers:
+            if ticker not in self.tickers:
+                self.add_ticker(ticker)
 
     def remove_ticker(self, ticker):
         self.tickers.remove(ticker)
@@ -66,7 +68,7 @@ class Prices:
             df.drop(ticker, axis=1, inplace=True)
 
     def add_ticker(self, ticker):
-        self.tickers.add(ticker)
+        self.tickers.append(ticker)
         ticker_df = self.get_historical_prices(ticker)
         self.prices_raw[ticker] = ticker_df
         self.prices_normalized[ticker] = ticker_df / ticker_df.iloc[0]

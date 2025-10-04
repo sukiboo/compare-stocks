@@ -42,7 +42,7 @@ class NormalizedAssetPricesApp:
     def update_figure(self, tickers, date_range=[None, None]):
         tickers_updated, range_updated = False, False
 
-        if set(tickers) != self.prices.tickers:
+        if list(tickers) != self.prices.tickers:
             self.prices.update_tickers(tickers)
             tickers_updated = True
             print(f"tickers update: {', '.join(tickers) if tickers else 'None'}")
