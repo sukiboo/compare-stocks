@@ -115,8 +115,8 @@ def plot_prices(timestamps, prices, rolling_changes, idx_range):
     # configure axes
     xaxis1_dict = dict(rangeslider=dict(visible=True, thickness=0.1), tickangle=-30, nticks=20)
     xaxis2_dict = dict(matches="x1", showticklabels=False)
-    xaxis1_dict["range"] = date_range
-    xaxis2_dict["range"] = date_range
+    xaxis1_dict["range"] = date_range  # type: ignore
+    xaxis2_dict["range"] = date_range  # type: ignore
     yaxis1_dict = dict(showticklabels=False)
     yaxis2_dict = dict(
         autorange=True,

@@ -10,7 +10,7 @@ def get_available_tickers():
     nyse_url = "https://www.nasdaqtrader.com/dynamic/SymDir/otherlisted.txt"
     nasdaq_tickers = pd.read_csv(nasdaq_url, sep="|")["Symbol"].dropna().tolist()[:-1]
     nyse_tickers = pd.read_csv(nyse_url, sep="|")["ACT Symbol"].dropna().tolist()[:-1]
-    all_tickers = sorted(set(nasdaq_tickers + nyse_tickers))
+    all_tickers = sorted(set(nasdaq_tickers + nyse_tickers))  # type: ignore
     return all_tickers
 
 

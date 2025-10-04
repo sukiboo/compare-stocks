@@ -23,19 +23,19 @@ class Prices:
         return f"Prices(tickers={self.tickers})"
 
     def get_historical_prices(self, tickers):
-        df = (
-            yf.download(
-                tickers,
-                interval=PRICES_RETRIEVAL_INTERVAL,
-                start=self.date_range[0],
-                end=self.date_range[-1],
-                auto_adjust=False,
-                progress=False,
-            )
-            .Close.reindex(index=self.date_range)
-            .bfill()
-            .ffill()
+        data = yf.download(
+            tickers,
+            interval=PRICES_RETRIEVAL_INTERVAL,
+            start=self.date_range[0],
+            end=self.date_range[-1],
+            auto_adjust=False,
+            progress=False,
         )
+
+        if data is None or data.empty:
+            raise ValueError(f"No data retrieved for tickers: {tickers}")
+
+        df = data.Close.reindex(index=self.date_range).bfill().ffill()
         return df
 
     def retrieve_prices(self, tickers):
