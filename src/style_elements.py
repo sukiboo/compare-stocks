@@ -1,4 +1,5 @@
 import itertools
+from datetime import datetime
 
 import plotly.express as px
 import plotly.graph_objects as go
@@ -30,33 +31,36 @@ def setup_interval_buttons():
     }
     interval_buttons_html = html.Div(
         [
-            html.Button("10y", id="btn-10y", n_clicks=0, style=button_style),
-            html.Button("5y", id="btn-5y", n_clicks=0, style=button_style),
-            html.Button("3y", id="btn-3y", n_clicks=0, style=button_style),
-            html.Button("2y", id="btn-2y", n_clicks=0, style=button_style),
+            html.Button("ytd", id="btn-ytd", n_clicks=0, style=button_style),
+            html.Button("1mo", id="btn-1mo", n_clicks=0, style=button_style),
+            html.Button("6mo", id="btn-6mo", n_clicks=0, style=button_style),
             html.Button("1y", id="btn-1y", n_clicks=0, style=button_style),
-            html.Button("6m", id="btn-6m", n_clicks=0, style=button_style),
-            html.Button("1m", id="btn-1m", n_clicks=0, style=button_style),
+            html.Button("2y", id="btn-2y", n_clicks=0, style=button_style),
+            html.Button("3y", id="btn-3y", n_clicks=0, style=button_style),
+            html.Button("5y", id="btn-5y", n_clicks=0, style=button_style),
+            html.Button("10y", id="btn-10y", n_clicks=0, style=button_style),
         ],
-        style={"marginTop": "5px"},
+        style={"marginTop": "5px", "gap": "5px", "display": "flex", "flexWrap": "wrap"},
     )
     interval_buttons_ids = [
-        "btn-10y",
-        "btn-5y",
-        "btn-3y",
-        "btn-2y",
+        "btn-ytd",
+        "btn-1mo",
+        "btn-6mo",
         "btn-1y",
-        "btn-6m",
-        "btn-1m",
+        "btn-2y",
+        "btn-3y",
+        "btn-5y",
+        "btn-10y",
     ]
     interval_offsets = {
-        "btn-10y": 10 * 365,
-        "btn-5y": 5 * 365,
-        "btn-3y": 3 * 365,
-        "btn-2y": 2 * 365,
+        "btn-ytd": max(1, (datetime.now() - datetime(datetime.now().year, 1, 1)).days),
+        "btn-1mo": 30,
+        "btn-6mo": 182,
         "btn-1y": 365,
-        "btn-6m": 182,
-        "btn-1m": 30,
+        "btn-2y": 2 * 365,
+        "btn-3y": 3 * 365,
+        "btn-5y": 5 * 365,
+        "btn-10y": 10 * 365,
     }
     return interval_buttons_html, interval_buttons_ids, interval_offsets
 

@@ -102,7 +102,7 @@ class NormalizedAssetPricesApp:
             prevent_initial_call=True,
         )
         def update_figure_after_delay(
-            relayout_data, tickers, n10y, n5y, n3y, n2y, n1y, n6m, n1m, current_figure
+            relayout_data, tickers, nytd, n1mo, n6mo, n1y, n2y, n3y, n5y, n10y, current_figure
         ):
             date_range = get_date_range(current_figure["layout"])
             triggered_id = ctx.triggered_id
