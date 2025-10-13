@@ -68,8 +68,8 @@ class Prices:
             df.drop(ticker, axis=1, inplace=True)
 
     def add_ticker(self, ticker):
-        self.tickers.append(ticker)
         ticker_df = self.get_historical_prices(ticker)
+        self.tickers.append(ticker)
         self.prices_raw[ticker] = ticker_df
         self.prices_normalized[ticker] = ticker_df / ticker_df.iloc[0]
         self.percentage_changes[ticker] = (
@@ -81,3 +81,10 @@ class Prices:
             .rolling(window=PRICES_ROLLING_WINDOW, min_periods=PRICES_ROLLING_MIN_PERIOD)
             .sum()
         )
+
+    def is_valid_ticker(self, ticker):
+        try:
+            data = yf.download(ticker, period="5d", progress=False, auto_adjust=False)
+            return data is not None and not data.empty
+        except Exception:
+            return False

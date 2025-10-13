@@ -1,3 +1,4 @@
+import re
 from datetime import timedelta
 
 import numpy as np
@@ -5,7 +6,13 @@ import pandas as pd
 from dateutil import parser  # type: ignore
 
 
+def normalize_ticker_symbol(ticker_input):
+    """Remove all non-alphanumeric characters from ticker input, return uppercase."""
+    return re.sub(r"[^A-Z0-9]", "", ticker_input.upper())
+
+
 def get_available_tickers():
+    """This list is too limited, I opted for any input + validation in the app."""
     nasdaq_url = "https://www.nasdaqtrader.com/dynamic/SymDir/nasdaqlisted.txt"
     nyse_url = "https://www.nasdaqtrader.com/dynamic/SymDir/otherlisted.txt"
     nasdaq_tickers = pd.read_csv(nasdaq_url, sep="|")["Symbol"].dropna().tolist()[:-1]

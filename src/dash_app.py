@@ -7,7 +7,12 @@ from src.style_elements import (
     setup_interval_buttons,
     setup_ticker_selection,
 )
-from src.utils import adjust_date_range, date_to_idx_range, get_date_range
+from src.utils import (
+    adjust_date_range,
+    date_to_idx_range,
+    get_date_range,
+    normalize_ticker_symbol,
+)
 
 
 class NormalizedAssetPricesApp:
@@ -96,6 +101,7 @@ class NormalizedAssetPricesApp:
                 Output("ticker-selection", "options"),
                 Output("ticker-selection", "value"),
                 Output("ticker-input", "value"),
+                Output("ticker-input", "placeholder"),
             ],
             [Input("ticker-input", "n_submit"), Input("ticker-selection", "value")],
             [State("ticker-input", "value"), State("ticker-selection", "value")],
@@ -103,16 +109,23 @@ class NormalizedAssetPricesApp:
         )
         def update_tickers(n_submit, selected_tickers, input_ticker, current_tickers):
             triggered_id = ctx.triggered_id
-            if triggered_id == "ticker-input" and input_ticker and input_ticker.strip():
-                ticker = input_ticker.strip().upper()
-                tickers = current_tickers if current_tickers else []
-                if ticker not in tickers:
-                    tickers = tickers + [ticker]
-                options = [{"label": t, "value": t} for t in tickers]
-                return options, tickers, ""
-            tickers = selected_tickers if selected_tickers else []
+            tickers = current_tickers if current_tickers else []
             options = [{"label": t, "value": t} for t in tickers]
-            return options, tickers, input_ticker or ""
+
+            if triggered_id == "ticker-input" and input_ticker and input_ticker.strip():
+                ticker = normalize_ticker_symbol(input_ticker)
+                if ticker in tickers:
+                    return options, tickers, "", f"⚠️ `{ticker}` already added"
+                elif not self.prices.is_valid_ticker(ticker):
+                    return options, tickers, "", f"❌ `{ticker}` is not valid"
+                else:
+                    tickers = tickers + [ticker]
+                    options = [{"label": t, "value": t} for t in tickers]
+                    return options, tickers, "", f"✅ `{ticker}` added"
+            else:
+                tickers = selected_tickers if selected_tickers else []
+                options = [{"label": t, "value": t} for t in tickers]
+                return options, tickers, input_ticker or "", "Enter ticker symbol..."
 
         @self.app.callback(
             Output("plotly-normalized-asset-prices", "figure"),
