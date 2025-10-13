@@ -17,6 +17,8 @@ def setup_ticker_selection(initial_tickers):
                 value=initial_tickers,
                 multi=True,
                 placeholder="No tickers selected...",
+                searchable=False,
+                clearable=False,
                 style={
                     "flex": "3",
                     "fontFamily": "'Courier New', Courier, monospace",
@@ -38,7 +40,7 @@ def setup_ticker_selection(initial_tickers):
                 n_submit=0,
             ),
         ],
-        style={"display": "flex", "gap": "10px", "marginTop": "10px", "marginBottom": "10px"},
+        style={"display": "flex", "gap": "10px", "marginBottom": "10px"},
     )
     return ticker_selection
 
