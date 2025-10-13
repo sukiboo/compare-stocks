@@ -1,6 +1,11 @@
 from dash import Dash, Input, Output, State, ctx, dcc, html
 
-from src.constants import APP_DATE_START, APP_INITIAL_INTERVAL_DAYS, APP_INITIAL_TICKERS
+from src.constants import (
+    APP_DATE_START,
+    APP_INITIAL_INTERVAL_DAYS,
+    APP_INITIAL_TICKERS,
+    APP_MAX_TICKERS,
+)
 from src.prices import Prices
 from src.style_elements import (
     plot_prices,
@@ -112,12 +117,14 @@ class NormalizedAssetPricesApp:
             tickers = current_tickers if current_tickers else []
             options = [{"label": t, "value": t} for t in tickers]
 
-            if triggered_id == "ticker-input" and input_ticker and input_ticker.strip():
+            if triggered_id == "ticker-input" and input_ticker.strip():
                 ticker = normalize_ticker_symbol(input_ticker)
                 if ticker in tickers:
                     return options, tickers, "", f"⚠️ `{ticker}` already added"
                 elif not self.prices.is_valid_ticker(ticker):
                     return options, tickers, "", f"❌ `{ticker}` is not valid"
+                elif len(tickers) >= APP_MAX_TICKERS:
+                    return options, tickers, "", f"⛔ {APP_MAX_TICKERS} tickers max!"
                 else:
                     tickers = tickers + [ticker]
                     options = [{"label": t, "value": t} for t in tickers]
