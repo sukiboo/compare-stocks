@@ -107,8 +107,9 @@ class NormalizedAssetPricesApp:
             date_range = get_date_range(current_figure["layout"])
             triggered_id = ctx.triggered_id
             if triggered_id in self.interval_buttons_ids:
+                offset_days = self.interval_offsets[triggered_id]
                 date_range = adjust_date_range(
-                    self.timestamps, self.interval_offsets[triggered_id], date_range
+                    self.timestamps, offset_days, triggered_id, date_range
                 )
             fig = self.update_figure(tickers, date_range)
             return fig

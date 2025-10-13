@@ -36,8 +36,8 @@ def get_date_range(figure_layout):
     return date_range
 
 
-def adjust_date_range(timestamps, offset_days, date_range=None):
-    if not date_range:
+def adjust_date_range(timestamps, offset_days, triggered_id="btn-1y", date_range=None):
+    if not date_range or triggered_id == "btn-ytd":
         start_date = timestamps[0].strftime("%Y-%m-%d")
         end_date = timestamps[-1].strftime("%Y-%m-%d")
     else:
