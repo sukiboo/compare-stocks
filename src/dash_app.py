@@ -92,6 +92,29 @@ class NormalizedAssetPricesApp:
         )
 
         @self.app.callback(
+            [
+                Output("ticker-selection", "options"),
+                Output("ticker-selection", "value"),
+                Output("ticker-input", "value"),
+            ],
+            [Input("ticker-input", "n_submit"), Input("ticker-selection", "value")],
+            [State("ticker-input", "value"), State("ticker-selection", "value")],
+            prevent_initial_call=True,
+        )
+        def update_tickers(n_submit, selected_tickers, input_ticker, current_tickers):
+            triggered_id = ctx.triggered_id
+            if triggered_id == "ticker-input" and input_ticker and input_ticker.strip():
+                ticker = input_ticker.strip().upper()
+                tickers = current_tickers if current_tickers else []
+                if ticker not in tickers:
+                    tickers = tickers + [ticker]
+                options = [{"label": t, "value": t} for t in tickers]
+                return options, tickers, ""
+            tickers = selected_tickers if selected_tickers else []
+            options = [{"label": t, "value": t} for t in tickers]
+            return options, tickers, input_ticker or ""
+
+        @self.app.callback(
             Output("plotly-normalized-asset-prices", "figure"),
             [
                 Input("debounced-relayout", "data"),
@@ -111,7 +134,7 @@ class NormalizedAssetPricesApp:
                 date_range = adjust_date_range(
                     self.timestamps, offset_days, triggered_id, date_range
                 )
-            fig = self.update_figure(tickers, date_range)
+            fig = self.update_figure(tickers or [], date_range)
             return fig
 
     def run(self, **kwargs):

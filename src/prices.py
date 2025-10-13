@@ -17,7 +17,7 @@ class Prices:
     def __init__(self, initial_tickers, date_start):
         self.tickers = list(initial_tickers)
         self.date_range = pd.date_range(start=date_start, end=date.today(), freq="B")
-        self.retrieve_prices(initial_tickers)
+        self.get_retrieve_prices(initial_tickers)
 
     def __str__(self):
         return f"Prices(tickers={self.tickers})"
@@ -38,7 +38,7 @@ class Prices:
         df = data.Close.reindex(index=self.date_range).bfill().ffill()
         return df
 
-    def retrieve_prices(self, tickers):
+    def get_retrieve_prices(self, tickers):
         self.prices_raw = self.get_historical_prices(tickers).reindex(columns=tickers)
         self.prices_normalized = self.prices_raw / self.prices_raw.iloc[0]
         self.percentage_changes = (

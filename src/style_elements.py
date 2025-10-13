@@ -5,17 +5,40 @@ import plotly.express as px
 import plotly.graph_objects as go
 from dash import dcc, html
 
-from src.utils import get_available_tickers, normalize_prices
+from src.utils import normalize_prices
 
 
 def setup_ticker_selection(initial_tickers):
-    available_tickers = get_available_tickers()
-    ticker_selection = dcc.Dropdown(
-        id="ticker-selection",
-        options=[{"label": ticker, "value": ticker.upper()} for ticker in available_tickers],
-        value=initial_tickers,
-        multi=True,
-        placeholder="Select tickers...",
+    ticker_selection = html.Div(
+        [
+            dcc.Dropdown(
+                id="ticker-selection",
+                options=[{"label": ticker, "value": ticker} for ticker in initial_tickers],
+                value=initial_tickers,
+                multi=True,
+                placeholder="No tickers selected...",
+                style={
+                    "flex": "3",
+                    "fontFamily": "'Courier New', Courier, monospace",
+                    "fontWeight": "bold",
+                },
+            ),
+            dcc.Input(
+                id="ticker-input",
+                type="text",
+                placeholder="Enter ticker symbol...",
+                style={
+                    "flex": "1",
+                    "padding": "10px",
+                    "fontSize": "14px",
+                    "fontFamily": "'Courier New', Courier, monospace",
+                    "borderRadius": "5px",
+                    "border": "1px solid #ccc",
+                },
+                n_submit=0,
+            ),
+        ],
+        style={"display": "flex", "gap": "10px", "marginTop": "10px", "marginBottom": "10px"},
     )
     return ticker_selection
 
@@ -145,7 +168,7 @@ def plot_prices(timestamps, prices, rolling_changes, idx_range):
         uirevision="constant",  # prevent resets from the xrange compression
         font=dict(family="Courier New, Monospace", size=14, weight="bold"),
         legend=dict(
-            title=dict(text="assets: "),
+            title=dict(text="Tickers: "),
             orientation="h",
             x=0.0,
             y=1.0,
