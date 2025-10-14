@@ -79,8 +79,8 @@ class NormalizedAssetPricesApp:
             [
                 dcc.Graph(id="plotly-normalized-asset-prices", figure=self.fig),
                 dcc.Store(id="debounced-relayout", data=None),
-                self.ticker_selection,
                 self.interval_buttons_html,
+                self.ticker_selection,
             ]
         )
 

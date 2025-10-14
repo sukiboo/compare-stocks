@@ -40,7 +40,13 @@ def setup_ticker_selection(initial_tickers):
                 n_submit=0,
             ),
         ],
-        style={"display": "flex", "gap": "10px", "marginBottom": "10px"},
+        style={
+            "display": "flex",
+            "gap": "10px",
+            "marginBottom": "10px",
+            "marginLeft": "80px",
+            "marginRight": "80px",
+        },
     )
     return ticker_selection
 
@@ -65,7 +71,14 @@ def setup_interval_buttons():
             html.Button("5y", id="btn-5y", n_clicks=0, style=button_style),
             html.Button("10y", id="btn-10y", n_clicks=0, style=button_style),
         ],
-        style={"marginTop": "5px", "gap": "5px", "display": "flex", "flexWrap": "wrap"},
+        style={
+            "marginTop": "5px",
+            "gap": "5px",
+            "display": "flex",
+            "flexWrap": "wrap",
+            "marginLeft": "80px",
+            "marginRight": "80px",
+        },
     )
     interval_buttons_ids = [
         "btn-ytd",
