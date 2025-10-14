@@ -1,10 +1,10 @@
 import itertools
 from datetime import datetime
 
-import plotly.express as px
 import plotly.graph_objects as go
 from dash import dcc, html
 
+from src.constants import COLORS
 from src.utils import normalize_prices
 
 
@@ -112,7 +112,7 @@ def plot_prices(timestamps, prices, rolling_changes, idx_range):
     fig = go.Figure()
 
     # rangeslider plot
-    colors = itertools.cycle(px.colors.qualitative.Set2)
+    colors = itertools.cycle(COLORS)
     for asset in prices.columns:
         fig.add_trace(
             go.Scatter(
@@ -126,7 +126,7 @@ def plot_prices(timestamps, prices, rolling_changes, idx_range):
         )
 
     # main plot
-    colors = itertools.cycle(px.colors.qualitative.Set2)
+    colors = itertools.cycle(COLORS)
     for asset in prices_normalized.columns:
         y_values = 100 * prices_normalized[asset]
         formatted_values = [f"{val:+.2f}%" for val in y_values]

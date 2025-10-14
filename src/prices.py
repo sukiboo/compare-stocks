@@ -4,6 +4,7 @@ import pandas as pd
 import yfinance as yf
 
 from src.constants import (
+    APP_PORTFOLIO,
     PRICES_EPS,
     PRICES_RETRIEVAL_INTERVAL,
     PRICES_ROLLING_MIN_PERIOD,
@@ -17,7 +18,7 @@ class Prices:
     def __init__(self, initial_tickers, date_start):
         self.tickers = list(initial_tickers)
         self.date_range = pd.date_range(start=date_start, end=date.today(), freq="B")
-        self.get_retrieve_prices(initial_tickers)
+        self.get_retrieve_prices(APP_PORTFOLIO)
 
     def __str__(self):
         return f"Prices(tickers={self.tickers})"
@@ -38,8 +39,12 @@ class Prices:
         df = data.Close.reindex(index=self.date_range).bfill().ffill()
         return df
 
-    def get_retrieve_prices(self, tickers):
+    def get_retrieve_prices(self, portfolio):
+        tickers = list(portfolio.keys())
         self.prices_raw = self.get_historical_prices(tickers).reindex(columns=tickers)
+        portfolio_price_raw = self.prices_raw.mul(list(portfolio.values()), axis=1).sum(axis=1)
+        self.prices_raw.insert(0, "Portfolio", portfolio_price_raw)
+
         self.prices_normalized = self.prices_raw / self.prices_raw.iloc[0]
         self.percentage_changes = (
             self.prices_normalized / (self.prices_normalized.shift(1) + PRICES_EPS) - 1
