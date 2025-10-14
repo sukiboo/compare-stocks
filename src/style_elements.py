@@ -128,14 +128,24 @@ def plot_prices(timestamps, prices, rolling_changes, idx_range):
     # main plot
     colors = itertools.cycle(px.colors.qualitative.Set2)
     for asset in prices_normalized.columns:
+        y_values = 100 * prices_normalized[asset]
+        formatted_values = [f"{val:+.2f}%" for val in y_values]
         fig.add_trace(
             go.Scatter(
                 x=timestamps,
-                y=100 * prices_normalized[asset],
+                y=y_values,
+                customdata=formatted_values,
                 line=dict(width=3, color=next(colors)),
                 name=asset,
                 xaxis="x2",
                 yaxis="y2",
+                hovertemplate=(
+                    "<b style='font-family:Courier New,monospace'>"
+                    "%{customdata} %{fullData.name}"
+                    "</b><br>"
+                    "<span style='font-family:Courier New,monospace'>%{x}</span>"
+                    "<extra></extra>"
+                ),
             )
         )
 
@@ -153,7 +163,7 @@ def plot_prices(timestamps, prices, rolling_changes, idx_range):
 
     # configure axes
     xaxis1_dict = dict(rangeslider=dict(visible=True, thickness=0.1), tickangle=-30, nticks=20)
-    xaxis2_dict = dict(matches="x1", showticklabels=False)
+    xaxis2_dict = dict(matches="x1", showticklabels=False, nticks=20, showgrid=True)
     xaxis1_dict["range"] = date_range  # type: ignore
     xaxis2_dict["range"] = date_range  # type: ignore
     yaxis1_dict = dict(showticklabels=False)
@@ -191,7 +201,7 @@ def plot_prices(timestamps, prices, rolling_changes, idx_range):
             xanchor="left",
             yanchor="bottom",
         ),
-        margin=dict(t=50, b=5),
+        margin=dict(t=50, b=10),
         template="plotly",
         height=600,
     )
