@@ -36,3 +36,9 @@ APP_PORTFOLIO = {
     "DFISX": 0.01,
     "MEDHX": 0.01,
 }
+# APP_PORTFOLIO = {
+#     "QQQ": 0.25,
+#     "SPY": 0.25,
+#     "VT": 0.25,
+#     "JCBUX": 0.25,
+# }

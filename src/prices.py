@@ -1,5 +1,6 @@
 from datetime import date
 
+import numpy as np
 import pandas as pd
 import yfinance as yf
 
@@ -23,6 +24,40 @@ class Prices:
     def __str__(self):
         return f"Prices(tickers={self.tickers})"
 
+    def add_dividends(self, df, ticker):
+        try:
+            ticker_obj = yf.Ticker(ticker)
+            dividends = ticker_obj.dividends
+
+            if not dividends.empty:
+                # Convert timezone-aware dividend dates to timezone-naive
+                dividends.index = dividends.index.tz_localize(None)
+                # Reindex to match our date range, filling with 0 for non-dividend dates
+                dividends_aligned = dividends.reindex(self.date_range, fill_value=0.0)
+
+                # Calculate cumulative total return using log-space for efficiency
+                dividend_returns = dividends_aligned / df[ticker]
+                log_factors = np.log1p(dividend_returns)
+                cumulative_log = log_factors.cumsum()
+                cumulative_factor = np.exp(cumulative_log)
+
+                # Apply the cumulative factor
+                df[ticker] = df[ticker] * cumulative_factor
+
+            else:
+                # Try to get yield for securities without dividend payments
+                annual_yield = ticker_obj.info.get("yield", 0.0)
+                if annual_yield > 0:
+                    # Apply yield continuously over time
+                    days_elapsed = (self.date_range - self.date_range[0]).days
+                    log_growth = np.log1p(annual_yield) * days_elapsed / 365.25
+                    cumulative_factor = np.exp(log_growth)
+                    df[ticker] = df[ticker] * cumulative_factor
+
+        except Exception as e:
+            print(f"Could not adjust dividends/yield for {ticker}: {e}")
+            pass
+
     def get_historical_prices(self, tickers):
         data = yf.download(
             tickers,
@@ -42,6 +77,11 @@ class Prices:
     def get_retrieve_prices(self, portfolio):
         tickers = list(portfolio.keys())
         self.prices_raw = self.get_historical_prices(tickers).reindex(columns=tickers)
+
+        # Add dividends
+        for ticker in tickers:
+            self.add_dividends(self.prices_raw, ticker)
+
         portfolio_price_raw = self.prices_raw.mul(list(portfolio.values()), axis=1).sum(axis=1)
         self.prices_raw.insert(0, "Portfolio", portfolio_price_raw)
 
@@ -76,7 +116,8 @@ class Prices:
         ticker_df = self.get_historical_prices(ticker)
         self.tickers.append(ticker)
         self.prices_raw[ticker] = ticker_df
-        self.prices_normalized[ticker] = ticker_df / ticker_df.iloc[0]
+        self.add_dividends(self.prices_raw, ticker)
+        self.prices_normalized[ticker] = self.prices_raw[ticker] / self.prices_raw[ticker].iloc[0]
         self.percentage_changes[ticker] = (
             self.prices_normalized[ticker] / (self.prices_normalized[ticker].shift(1) + PRICES_EPS)
             - 1
