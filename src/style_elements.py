@@ -59,6 +59,8 @@ def setup_interval_buttons():
         "fontFamily": "'Courier New', Courier, monospace",
         "fontWeight": "bold",
         "textAlign": "center",
+        "marginBottom": "5px",
+        "marginTop": "5px",
     }
     interval_buttons_html = html.Div(
         [
@@ -189,7 +191,7 @@ def plot_prices(timestamps, prices, rolling_changes, idx_range):
             xanchor="left",
             yanchor="bottom",
         ),
-        margin=dict(t=50, b=50),
+        margin=dict(t=50, b=5),
         template="plotly",
         height=600,
     )
