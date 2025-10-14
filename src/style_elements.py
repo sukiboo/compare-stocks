@@ -43,7 +43,7 @@ def setup_ticker_selection(initial_tickers):
         style={
             "display": "flex",
             "gap": "10px",
-            "marginBottom": "10px",
+            "marginTop": "10px",
             "marginLeft": "80px",
             "marginRight": "80px",
         },
@@ -72,7 +72,6 @@ def setup_interval_buttons():
             html.Button("10y", id="btn-10y", n_clicks=0, style=button_style),
         ],
         style={
-            "marginTop": "5px",
             "gap": "5px",
             "display": "flex",
             "flexWrap": "wrap",
