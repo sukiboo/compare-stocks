@@ -48,10 +48,11 @@ class Prices:
                 # Try to get yield for securities without dividend payments
                 annual_yield = ticker_obj.info.get("yield", 0.0)
                 if annual_yield > 0:
-                    # Apply yield continuously over time
+                    # Apply yield continuously over time using compound interest
                     days_elapsed = (self.date_range - self.date_range[0]).days
-                    log_growth = np.log1p(annual_yield) * days_elapsed / 365.25
-                    cumulative_factor = np.exp(log_growth)
+                    # Convert annual yield to continuous compounding rate
+                    continuous_rate = np.log(1 + annual_yield)
+                    cumulative_factor = np.exp(continuous_rate * days_elapsed / 365.25)
                     df[ticker] = df[ticker] * cumulative_factor
 
         except Exception as e:
