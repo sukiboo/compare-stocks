@@ -171,7 +171,7 @@ def plot_prices(timestamps, prices, prices_copy, rolling_changes, idx_range):
         autorange=True,
         title="relative price change",
         nticks=12,
-        tickformat=".0f",
+        tickformat="+d",
         ticksuffix="%",
         ticks="outside",
     )

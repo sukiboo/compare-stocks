@@ -9,14 +9,24 @@ PRICES_ROLLING_WINDOW = 251
 PRICES_ROLLING_MIN_PERIOD = 1
 
 COLORS = [
-    "#0066CC",  # Strong blue
-    "#FF6B35",  # Coral
-    "#00CC88",  # Teal
-    "#FFB627",  # Gold
-    "#9B4DCA",  # Purple
-    "#E8384F",  # Red
-    "#00A8CC",  # Sky blue
-    "#6BCF7F",  # Light green
+    "#4488FF",
+    "#FF8844",
+    "#44FF88",
+    "#8844FF",
+    "#FF4488",
+    "#00AA88",
+    "#66CCFF",
+    "#FFCC66",
+    "#66FFCC",
+    "#CC66FF",
+    "#FF66CC",
+    "#CCFF66",
+    "#44AAFF",
+    "#FFAA44",
+    "#44FFAA",
+    "#AA44FF",
+    "#FF44AA",
+    "#AAFF44",
 ]
 
 APP_PORTFOLIO = {
@@ -35,4 +45,6 @@ APP_PORTFOLIO = {
     "PFORX": 0.03,
     "DFISX": 0.02,
     "MEDHX": 0.02,
+    "VT": 0.01,
+    "QQQ": 0.01,
 }
