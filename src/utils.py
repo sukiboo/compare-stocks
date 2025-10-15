@@ -5,6 +5,8 @@ import numpy as np
 import pandas as pd
 from dateutil import parser  # type: ignore
 
+from src.constants import APP_PORTFOLIO
+
 
 def normalize_ticker_symbol(ticker_input):
     """Remove all non-alphanumeric characters from ticker input, return uppercase."""
@@ -56,8 +58,16 @@ def adjust_date_range(timestamps, offset_days, triggered_id="btn-1y", date_range
     return [start_date, end_date]
 
 
-def normalize_prices(prices, date_range):
+def normalize_prices(prices, prices_copy, date_range):
     date0, date1 = date_range
     prices_normalized = np.nan * prices
     prices_normalized.loc[date0:date1] = prices[date0:date1] / prices.loc[date0] - 1
+
+    # tickers = list(APP_PORTFOLIO.keys())
+    weights = list(APP_PORTFOLIO.values())
+    prices_normalized_copy = np.nan * prices_copy
+    prices_normalized_copy.loc[date0:date1] = prices_copy[date0:date1] / prices_copy.loc[date0] - 1
+    portfolio_normalized = prices_normalized_copy.mul(weights, axis=1).sum(axis=1)
+    prices_normalized.insert(0, "Portfolio", portfolio_normalized)
+
     return prices_normalized

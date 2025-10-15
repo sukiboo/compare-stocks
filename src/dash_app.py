@@ -39,6 +39,7 @@ class NormalizedAssetPricesApp:
     def setup_env(self, initial_tickers, date_start, initial_interval_days):
         self.prices = Prices(initial_tickers, date_start)
         self.timestamps = self.prices.date_range
+        self.portfolio_prices_normalized = self.prices.prices_normalized.copy()
         self.idx_range = date_to_idx_range(
             self.timestamps,
             adjust_date_range(self.timestamps, initial_interval_days),
@@ -46,6 +47,7 @@ class NormalizedAssetPricesApp:
         self.fig = plot_prices(
             self.timestamps,
             self.prices.prices_normalized,
+            self.portfolio_prices_normalized,
             self.prices.rolling_changes,
             self.idx_range,
         )
@@ -68,6 +70,7 @@ class NormalizedAssetPricesApp:
             self.fig = plot_prices(
                 self.timestamps,
                 self.prices.prices_normalized,
+                self.portfolio_prices_normalized,
                 self.prices.rolling_changes,
                 idx_range,
             )

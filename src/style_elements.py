@@ -104,15 +104,15 @@ def setup_interval_buttons():
     return interval_buttons_html, interval_buttons_ids, interval_offsets
 
 
-def plot_prices(timestamps, prices, rolling_changes, idx_range):
+def plot_prices(timestamps, prices, prices_copy, rolling_changes, idx_range):
     idx0, idx1 = idx_range
     date_range = [timestamps[idx0], timestamps[idx1]]
-    prices_normalized = normalize_prices(prices, date_range)
+    prices_normalized = normalize_prices(prices, prices_copy, date_range)
 
     fig = go.Figure()
 
     # rangeslider plot
-    colors = itertools.cycle(COLORS)
+    colors = itertools.cycle(COLORS[1:])
     for asset in prices.columns:
         fig.add_trace(
             go.Scatter(
@@ -180,7 +180,7 @@ def plot_prices(timestamps, prices, rolling_changes, idx_range):
         overlaying="y2",
         side="right",
         nticks=12,
-        tickformat=".0f",
+        tickformat="+d",
         ticksuffix="%",
         ticks="outside",
     )

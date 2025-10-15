@@ -77,13 +77,8 @@ class Prices:
     def get_retrieve_prices(self, portfolio):
         tickers = list(portfolio.keys())
         self.prices_raw = self.get_historical_prices(tickers).reindex(columns=tickers)
-
-        # Add dividends
         for ticker in tickers:
             self.add_dividends(self.prices_raw, ticker)
-
-        portfolio_price_raw = self.prices_raw.mul(list(portfolio.values()), axis=1).sum(axis=1)
-        self.prices_raw.insert(0, "Portfolio", portfolio_price_raw)
 
         self.prices_normalized = self.prices_raw / self.prices_raw.iloc[0]
         self.percentage_changes = (
