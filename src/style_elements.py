@@ -8,17 +8,21 @@ from src.constants import COLORS
 from src.utils import normalize_prices
 
 
-def setup_ticker_selection(initial_tickers):
+def setup_ticker_selection(initial_tickers, initial_value=None):
+    if initial_value is None:
+        initial_value = initial_tickers
+
     ticker_selection = html.Div(
         [
             dcc.Dropdown(
                 id="ticker-selection",
                 options=[{"label": ticker, "value": ticker} for ticker in initial_tickers],
-                value=initial_tickers,
+                value=list(initial_value),
                 multi=True,
                 placeholder="No tickers selected...",
                 searchable=False,
                 clearable=False,
+                persisted_props=[],
                 style={
                     "flex": "3",
                     "fontFamily": "'Courier New', Courier, monospace",
