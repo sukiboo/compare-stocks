@@ -49,11 +49,10 @@ class Prices:
         ).sum()
 
     def update_tickers(self, tickers):
-        selected_tickers = list(tickers)
         for ticker in self.tickers[:]:
-            if ticker not in selected_tickers:
+            if ticker not in tickers:
                 self.remove_ticker(ticker)
-        for ticker in selected_tickers:
+        for ticker in tickers:
             if ticker not in self.tickers:
                 self.add_ticker(ticker)
 

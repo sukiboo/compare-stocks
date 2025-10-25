@@ -15,5 +15,5 @@ COPY . .
 # Expose the default Spaces port
 ENV PORT 7860
 
-# Use Gunicorn to run the Dash app with 2 workers, 2 threads
-CMD gunicorn app:server --workers 2 --threads 2 -b 0.0.0.0:$PORT
+# Use Gunicorn to run the Dash app with 1 worker, 4 threads on HF toaster
+CMD gunicorn app:server --workers 1 --threads 4 -b 0.0.0.0:$PORT
