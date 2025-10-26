@@ -16,15 +16,15 @@ from src.constants import (
 class Prices:
     """Retrieve historical prices and compute relevant metrics."""
 
-    def __init__(self, initial_tickers, date_start):
+    def __init__(self, initial_tickers: list[str], date_start: str) -> None:
         self.tickers = list(initial_tickers)
         self.date_range = pd.date_range(start=date_start, end=date.today(), freq="B")
         self.get_relative_prices(APP_PORTFOLIO)
 
-    def __str__(self):
+    def __str__(self) -> str:
         return f"Prices(tickers={self.tickers})"
 
-    def get_historical_prices(self, tickers):
+    def get_historical_prices(self, tickers: str | list[str]) -> pd.DataFrame:
         data = yf.download(
             tickers,
             interval=PRICES_RETRIEVAL_INTERVAL,
@@ -57,7 +57,7 @@ class Prices:
 
         return df
 
-    def get_relative_prices(self, portfolio):
+    def get_relative_prices(self, portfolio: dict[str, float]) -> None:
         tickers = list(portfolio.keys())
         self.prices_raw = self.get_historical_prices(tickers).reindex(columns=tickers)
 
@@ -69,7 +69,7 @@ class Prices:
             window=PRICES_ROLLING_WINDOW, min_periods=PRICES_ROLLING_MIN_PERIOD
         ).sum()
 
-    def update_tickers(self, tickers):
+    def update_tickers(self, tickers: list[str]) -> None:
         selected_tickers = list(tickers)
         for ticker in self.tickers[:]:
             if ticker not in selected_tickers:
@@ -78,7 +78,7 @@ class Prices:
             if ticker not in self.tickers:
                 self.add_ticker(ticker)
 
-    def remove_ticker(self, ticker):
+    def remove_ticker(self, ticker: str) -> None:
         self.tickers.remove(ticker)
         for df in [
             self.prices_raw,
@@ -88,7 +88,7 @@ class Prices:
         ]:
             df.drop(ticker, axis=1, inplace=True)
 
-    def add_ticker(self, ticker):
+    def add_ticker(self, ticker: str) -> None:
         ticker_df = self.get_historical_prices(ticker)
         self.tickers.append(ticker)
         self.prices_raw[ticker] = ticker_df
@@ -103,7 +103,7 @@ class Prices:
             .sum()
         )
 
-    def is_valid_ticker(self, ticker):
+    def is_valid_ticker(self, ticker: str) -> bool:
         try:
             data = yf.download(ticker, period="5d", progress=False, auto_adjust=True)
             return data is not None and not data.empty
