@@ -74,6 +74,14 @@ class Prices:
             if ticker not in self.tickers:
                 self.add_ticker(ticker)
 
+        # reorder tickers
+        if self.tickers != tickers:
+            self.tickers = list(tickers)
+            self.prices_raw = self.prices_raw[tickers]
+            self.prices_normalized = self.prices_normalized[tickers]
+            self.percentage_changes = self.percentage_changes[tickers]
+            self.rolling_changes = self.rolling_changes[tickers]
+
     def remove_ticker(self, ticker):
         self.tickers.remove(ticker)
         for df in [

@@ -33,7 +33,7 @@ class NormalizedAssetPricesApp:
             setup_interval_buttons()
         )
         self.initial_tickers = initial_tickers
-        self.ticker_selection = setup_ticker_selection(initial_tickers, initial_value=[])
+        self.ticker_selection = setup_ticker_selection(initial_tickers)
         self.setup_app()
 
     def setup_env(self, initial_tickers, date_start, initial_interval_days):
@@ -78,25 +78,11 @@ class NormalizedAssetPricesApp:
         self.app = Dash(__name__)
         self.app.layout = html.Div(
             [
-                dcc.Location(id="url", refresh=False),
                 dcc.Graph(id="plotly-normalized-asset-prices", figure=self.fig),
                 dcc.Store(id="debounced-relayout", data=None),
                 self.interval_buttons_html,
                 self.ticker_selection,
             ]
-        )
-
-        # callback to reset tickers on page load/refresh
-        initial_tickers_js = list(self.initial_tickers)
-        self.app.clientside_callback(
-            f"""
-            function(pathname) {{
-                return {initial_tickers_js};
-            }}
-            """,
-            Output("ticker-selection", "value", allow_duplicate=True),
-            Input("url", "pathname"),
-            prevent_initial_call="initial_duplicate",
         )
 
         # wait 100ms between the updates, even though o1 insists that it's not a
