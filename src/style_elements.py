@@ -1,6 +1,7 @@
 import itertools
 from datetime import datetime
 
+import pandas as pd
 import plotly.graph_objects as go
 from dash import dcc, html
 
@@ -8,7 +9,7 @@ from src.constants import COLORS
 from src.utils import normalize_prices
 
 
-def setup_ticker_selection(initial_tickers):
+def setup_ticker_selection(initial_tickers: list[str]) -> html.Div:
     ticker_selection = html.Div(
         [
             dcc.Dropdown(
@@ -52,7 +53,7 @@ def setup_ticker_selection(initial_tickers):
     return ticker_selection
 
 
-def setup_interval_buttons():
+def setup_interval_buttons() -> tuple[html.Div, list[str], dict[str, int]]:
     button_style = {
         "padding": "10px 20px",
         "borderRadius": "10px",
@@ -105,7 +106,12 @@ def setup_interval_buttons():
     return interval_buttons_html, interval_buttons_ids, interval_offsets
 
 
-def plot_prices(timestamps, prices, rolling_changes, idx_range):
+def plot_prices(
+    timestamps: pd.DatetimeIndex,
+    prices: pd.DataFrame,
+    rolling_changes: pd.DataFrame,
+    idx_range: tuple[int, int],
+) -> go.Figure:
     idx0, idx1 = idx_range
     date_range = [timestamps[idx0], timestamps[idx1]]
     prices_normalized = normalize_prices(prices, date_range)

@@ -15,15 +15,15 @@ from src.constants import (
 class Prices:
     """Retrieve historical prices and compute relevant metrics."""
 
-    def __init__(self, initial_tickers, date_start):
+    def __init__(self, initial_tickers: list[str], date_start: str) -> None:
         self.tickers = list(initial_tickers)
         self.date_range = pd.date_range(start=date_start, end=date.today(), freq="B")
         self.get_relative_prices(initial_tickers)
 
-    def __str__(self):
+    def __str__(self) -> str:
         return f"Prices(tickers={self.tickers})"
 
-    def get_historical_prices(self, tickers):
+    def get_historical_prices(self, tickers: str | list[str]) -> pd.DataFrame:
         data = yf.download(
             tickers,
             interval=PRICES_RETRIEVAL_INTERVAL,
@@ -56,7 +56,7 @@ class Prices:
 
         return df
 
-    def get_relative_prices(self, tickers):
+    def get_relative_prices(self, tickers: list[str]) -> None:
         self.prices_raw = self.get_historical_prices(tickers).reindex(columns=tickers)
         self.prices_normalized = self.prices_raw / self.prices_raw.iloc[0]
         self.percentage_changes = (
@@ -66,7 +66,7 @@ class Prices:
             window=PRICES_ROLLING_WINDOW, min_periods=PRICES_ROLLING_MIN_PERIOD
         ).sum()
 
-    def update_tickers(self, tickers):
+    def update_tickers(self, tickers: list[str]) -> None:
         for ticker in self.tickers[:]:
             if ticker not in tickers:
                 self.remove_ticker(ticker)
@@ -82,7 +82,7 @@ class Prices:
             self.percentage_changes = self.percentage_changes[tickers]
             self.rolling_changes = self.rolling_changes[tickers]
 
-    def remove_ticker(self, ticker):
+    def remove_ticker(self, ticker: str) -> None:
         self.tickers.remove(ticker)
         for df in [
             self.prices_raw,
@@ -92,7 +92,7 @@ class Prices:
         ]:
             df.drop(ticker, axis=1, inplace=True)
 
-    def add_ticker(self, ticker):
+    def add_ticker(self, ticker: str) -> None:
         ticker_df = self.get_historical_prices(ticker)
         self.tickers.append(ticker)
         self.prices_raw[ticker] = ticker_df
@@ -107,7 +107,7 @@ class Prices:
             .sum()
         )
 
-    def is_valid_ticker(self, ticker):
+    def is_valid_ticker(self, ticker: str) -> bool:
         try:
             data = yf.download(ticker, period="5d", progress=False, auto_adjust=False)
             return data is not None and not data.empty
