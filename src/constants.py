@@ -1,4 +1,4 @@
-APP_INITIAL_TICKERS = ["QQQ", "SPY", "VTI", "VT"]
+APP_INITIAL_TICKERS = ["QQQ", "SPY", "VTI", "VT", "F", "AAPL", "MSFT", "META", "GOOG", "QCOM"]
 APP_DATE_START = "2020-01-01"
 APP_INITIAL_INTERVAL_DAYS = 365
 APP_MAX_TICKERS = 10
@@ -11,12 +11,12 @@ PRICES_ROLLING_MIN_PERIOD = 1
 COLORS = [
     "#4488FF",
     "#FF8844",
-    "#00AA88",
-    "#8844FF",
-    "#FF4488",
-    "#66CCFF",
-    "#FFCC66",
-    "#66FFCC",
-    "#CC66FF",
+    "#17BECF",
     "#FF66CC",
+    "#CC66FF",
+    "#00AA88",
+    "#FFCC66",
+    "#66CCFF",
+    "#FF4488",
+    "#8844FF",
 ]
