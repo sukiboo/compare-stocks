@@ -66,6 +66,7 @@ class NormalizedAssetPricesApp:
         self.fig = plot_prices(
             self.timestamps,
             self.prices.prices_normalized,
+            self.prices.prices_raw,
             self.prices.rolling_changes,
             self.idx_range,
         )
@@ -90,6 +91,7 @@ class NormalizedAssetPricesApp:
             self.fig = plot_prices(
                 self.timestamps,
                 self.prices.prices_normalized,
+                self.prices.prices_raw,
                 self.prices.rolling_changes,
                 idx_range,
             )

@@ -116,6 +116,7 @@ def setup_interval_buttons() -> tuple[html.Div, list[str], dict[str, int]]:
 def plot_prices(
     timestamps: pd.DatetimeIndex,
     prices: pd.DataFrame,
+    prices_raw: pd.DataFrame,
     rolling_changes: pd.DataFrame,
     idx_range: tuple[int, int],
 ) -> go.Figure:
@@ -143,21 +144,25 @@ def plot_prices(
     colors = itertools.cycle(COLORS)
     for asset in prices_normalized.columns:
         y_values = 100 * prices_normalized[asset]
-        formatted_values = [f"{val:+.2f}%" for val in y_values]
+        customdata = [
+            [f"{pct:+.2f}%", f"${price:,.2f}"] for pct, price in zip(y_values, prices_raw[asset])
+        ]
         fig.add_trace(
             go.Scatter(
                 x=timestamps,
                 y=y_values,
-                customdata=formatted_values,
+                customdata=customdata,
                 line=dict(width=3, color=next(colors)),
                 name=asset,
                 xaxis="x2",
                 yaxis="y2",
                 hovertemplate=(
-                    "<b style='font-family:Courier New,monospace'>"
-                    "%{customdata} %{fullData.name}"
-                    "</b><br>"
-                    "<span style='font-family:Courier New,monospace'>%{x}</span>"
+                    "<span style='font-family:Courier New,monospace'>"
+                    "<b>%{customdata[0]}</b> · %{customdata[1]}"
+                    "</span><br>"
+                    "<span style='font-family:Courier New,monospace'>"
+                    "<b>%{fullData.name}</b> · %{x|%d %b %Y}"
+                    "</span>"
                     "<extra></extra>"
                 ),
             )
