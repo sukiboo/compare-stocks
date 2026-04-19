@@ -8,6 +8,23 @@ from dash import dcc, html
 from src.constants import COLORS
 from src.utils import normalize_prices
 
+BUTTON_STYLE_INACTIVE = {
+    "padding": "10px 20px",
+    "borderRadius": "10px",
+    "cursor": "pointer",
+    "fontFamily": "'Courier New', Courier, monospace",
+    "fontWeight": "bold",
+    "textAlign": "center",
+    "marginBottom": "5px",
+    "marginTop": "5px",
+}
+BUTTON_STYLE_ACTIVE = {
+    **BUTTON_STYLE_INACTIVE,
+    "backgroundColor": COLORS[0],
+    "color": "#FFFFFF",
+    "borderColor": COLORS[0],
+}
+
 
 def setup_ticker_selection(initial_tickers: list[str]) -> html.Div:
     ticker_selection = html.Div(
@@ -54,26 +71,16 @@ def setup_ticker_selection(initial_tickers: list[str]) -> html.Div:
 
 
 def setup_interval_buttons() -> tuple[html.Div, list[str], dict[str, int]]:
-    button_style = {
-        "padding": "10px 20px",
-        "borderRadius": "10px",
-        "cursor": "pointer",
-        "fontFamily": "'Courier New', Courier, monospace",
-        "fontWeight": "bold",
-        "textAlign": "center",
-        "marginBottom": "5px",
-        "marginTop": "5px",
-    }
     interval_buttons_html = html.Div(
         [
-            html.Button("ytd", id="btn-ytd", n_clicks=0, style=button_style),
-            html.Button("1mo", id="btn-1mo", n_clicks=0, style=button_style),
-            html.Button("6mo", id="btn-6mo", n_clicks=0, style=button_style),
-            html.Button("1y", id="btn-1y", n_clicks=0, style=button_style),
-            html.Button("2y", id="btn-2y", n_clicks=0, style=button_style),
-            html.Button("3y", id="btn-3y", n_clicks=0, style=button_style),
-            html.Button("5y", id="btn-5y", n_clicks=0, style=button_style),
-            html.Button("10y", id="btn-10y", n_clicks=0, style=button_style),
+            html.Button("ytd", id="btn-ytd", n_clicks=0, style=BUTTON_STYLE_INACTIVE),
+            html.Button("1mo", id="btn-1mo", n_clicks=0, style=BUTTON_STYLE_INACTIVE),
+            html.Button("6mo", id="btn-6mo", n_clicks=0, style=BUTTON_STYLE_INACTIVE),
+            html.Button("1y", id="btn-1y", n_clicks=0, style=BUTTON_STYLE_INACTIVE),
+            html.Button("2y", id="btn-2y", n_clicks=0, style=BUTTON_STYLE_INACTIVE),
+            html.Button("3y", id="btn-3y", n_clicks=0, style=BUTTON_STYLE_INACTIVE),
+            html.Button("5y", id="btn-5y", n_clicks=0, style=BUTTON_STYLE_INACTIVE),
+            html.Button("10y", id="btn-10y", n_clicks=0, style=BUTTON_STYLE_INACTIVE),
         ],
         style={
             "gap": "5px",

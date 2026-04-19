@@ -1,7 +1,9 @@
+import json
 from collections.abc import Sequence
 from typing import Any
 
 from dash import Dash, Input, Output, State, ctx, dcc, html
+from dateutil import parser  # type: ignore
 from plotly.graph_objects import Figure
 
 from src.constants import (
@@ -12,6 +14,8 @@ from src.constants import (
 )
 from src.prices import Prices
 from src.style_elements import (
+    BUTTON_STYLE_ACTIVE,
+    BUTTON_STYLE_INACTIVE,
     plot_prices,
     setup_interval_buttons,
     setup_ticker_selection,
@@ -22,6 +26,8 @@ from src.utils import (
     get_date_range,
     normalize_ticker_symbol,
 )
+
+INTERVAL_LENGTH_TOLERANCE_DAYS = 2
 
 
 class NormalizedAssetPricesApp:
@@ -35,6 +41,14 @@ class NormalizedAssetPricesApp:
         self.setup_env(initial_tickers, date_start, initial_interval_days)
         self.interval_buttons_html, self.interval_buttons_ids, self.interval_offsets = (
             setup_interval_buttons()
+        )
+        self.initial_active_btn = next(
+            (
+                bid
+                for bid in self.interval_buttons_ids
+                if bid != "btn-ytd" and self.interval_offsets[bid] == initial_interval_days
+            ),
+            None,
         )
         self.initial_tickers = initial_tickers
         self.ticker_selection = setup_ticker_selection(initial_tickers)
@@ -88,6 +102,7 @@ class NormalizedAssetPricesApp:
             [
                 dcc.Graph(id="plotly-normalized-asset-prices", figure=self.fig),
                 dcc.Store(id="debounced-relayout", data=None),
+                dcc.Store(id="active-interval-btn", data=self.initial_active_btn),
                 self.interval_buttons_html,
                 self.ticker_selection,
             ]
@@ -108,6 +123,22 @@ class NormalizedAssetPricesApp:
             Output("debounced-relayout", "data"),
             Input("plotly-normalized-asset-prices", "relayoutData"),
             prevent_initial_call=True,
+        )
+
+        button_ids_js = json.dumps(self.interval_buttons_ids)
+        active_style_js = json.dumps(BUTTON_STYLE_ACTIVE)
+        inactive_style_js = json.dumps(BUTTON_STYLE_INACTIVE)
+        self.app.clientside_callback(
+            f"""
+            function (activeBtn) {{
+                const ids = {button_ids_js};
+                const active = {active_style_js};
+                const inactive = {inactive_style_js};
+                return ids.map(id => id === activeBtn ? active : inactive);
+            }}
+            """,
+            [Output(button_id, "style") for button_id in self.interval_buttons_ids],
+            Input("active-interval-btn", "data"),
         )
 
         @self.app.callback(
@@ -149,13 +180,19 @@ class NormalizedAssetPricesApp:
                 return options, tickers, input_ticker or "", "Enter ticker symbol..."
 
         @self.app.callback(
-            Output("plotly-normalized-asset-prices", "figure"),
+            [
+                Output("plotly-normalized-asset-prices", "figure"),
+                Output("active-interval-btn", "data"),
+            ],
             [
                 Input("debounced-relayout", "data"),
                 Input("ticker-selection", "value"),
                 *[Input(button_id, "n_clicks") for button_id in self.interval_buttons_ids],
             ],
-            State("plotly-normalized-asset-prices", "figure"),
+            [
+                State("plotly-normalized-asset-prices", "figure"),
+                State("active-interval-btn", "data"),
+            ],
             prevent_initial_call=True,
         )
         def update_figure_after_delay(
@@ -170,7 +207,8 @@ class NormalizedAssetPricesApp:
             n5y: int,
             n10y: int,
             current_figure: dict[str, Any],
-        ) -> Figure:
+            active_btn: str | None,
+        ) -> tuple[Figure, str | None]:
             date_range = get_date_range(current_figure["layout"])
             triggered_id = ctx.triggered_id
             if triggered_id in self.interval_buttons_ids:
@@ -178,8 +216,18 @@ class NormalizedAssetPricesApp:
                 date_range = adjust_date_range(
                     self.timestamps, offset_days, triggered_id, date_range
                 )
+                active_btn = triggered_id
+            elif triggered_id == "debounced-relayout" and active_btn is not None:
+                start, end = date_range
+                if start and end:
+                    length_days = (parser.parse(end) - parser.parse(start)).days
+                    expected = self.interval_offsets[active_btn]
+                    if abs(length_days - expected) > INTERVAL_LENGTH_TOLERANCE_DAYS:
+                        active_btn = None
+                else:
+                    active_btn = None
             fig = self.update_figure(tickers or [], date_range)
-            return fig
+            return fig, active_btn
 
     def run(self, **kwargs: Any) -> None:
         self.app.run_server(**kwargs)
