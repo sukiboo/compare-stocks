@@ -2,8 +2,7 @@ import json
 from collections.abc import Sequence
 from typing import Any
 
-from dash import Dash, Input, Output, State, ctx, dcc, html
-from dateutil import parser  # type: ignore
+from dash import Dash, Input, Output, State, ctx, dcc, html, no_update
 from plotly.graph_objects import Figure
 
 from src.constants import (
@@ -28,6 +27,73 @@ from src.utils import (
 )
 
 INTERVAL_LENGTH_TOLERANCE_DAYS = 2
+
+_JS_HELPERS = """
+    function _nearestIdx(tsMs, t) {
+        let lo = 0, hi = tsMs.length - 1;
+        if (t <= tsMs[lo]) return lo;
+        if (t >= tsMs[hi]) return hi;
+        while (lo < hi - 1) {
+            const mid = (lo + hi) >> 1;
+            if (tsMs[mid] < t) lo = mid; else hi = mid;
+        }
+        return (t - tsMs[lo] < tsMs[hi] - t) ? lo : hi;
+    }
+    function _msToDate(ms) {
+        const d = new Date(ms);
+        const y = d.getUTCFullYear();
+        const m = String(d.getUTCMonth() + 1).padStart(2, '0');
+        const day = String(d.getUTCDate()).padStart(2, '0');
+        return y + '-' + m + '-' + day;
+    }
+    function _getDateRange(layout) {
+        const r2 = layout && layout.xaxis2 && layout.xaxis2.range;
+        if (r2 && r2[0] && r2[1]) return [String(r2[0]).slice(0, 10), String(r2[1]).slice(0, 10)];
+        const r1 = layout && layout.xaxis && layout.xaxis.range;
+        if (r1 && r1[0] && r1[1]) return [String(r1[0]).slice(0, 10), String(r1[1]).slice(0, 10)];
+        return [null, null];
+    }
+    function _rescale(figure, rawPrices, d0, d1) {
+        const tsMs = rawPrices.timestamps_ms;
+        const tickers = rawPrices.tickers;
+        const prices = rawPrices.prices;
+        const N = tickers.length;
+        if (!N) return figure;
+        const idx0 = _nearestIdx(tsMs, Date.parse(d0));
+        const idx1 = _nearestIdx(tsMs, Date.parse(d1));
+        const newFig = Object.assign({}, figure);
+        newFig.data = figure.data.slice();
+        newFig.layout = Object.assign({}, figure.layout);
+        newFig.layout.xaxis = Object.assign({}, figure.layout.xaxis, {range: [d0, d1]});
+        newFig.layout.xaxis2 = Object.assign({}, figure.layout.xaxis2, {range: [d0, d1]});
+        const y2 = Object.assign({}, figure.layout.yaxis2 || {}, {autorange: true});
+        delete y2.range;
+        newFig.layout.yaxis2 = y2;
+        for (let i = 0; i < N; i++) {
+            const p = prices[tickers[i]];
+            if (!p) continue;
+            const base = p[idx0];
+            const y = new Array(p.length);
+            const cd = new Array(p.length);
+            for (let j = 0; j < p.length; j++) {
+                const price = p[j];
+                const priceStr = '$' + price.toLocaleString('en-US',
+                    {minimumFractionDigits: 2, maximumFractionDigits: 2});
+                if (j < idx0 || j > idx1) {
+                    y[j] = null;
+                    cd[j] = ['', priceStr];
+                } else {
+                    const yj = 100 * (price / base - 1);
+                    y[j] = yj;
+                    const pctStr = (yj >= 0 ? '+' : '') + yj.toFixed(2) + '%';
+                    cd[j] = [pctStr, priceStr];
+                }
+            }
+            newFig.data[N + i] = Object.assign({}, newFig.data[N + i], {y: y, customdata: cd});
+        }
+        return newFig;
+    }
+"""
 
 
 class NormalizedAssetPricesApp:
@@ -98,6 +164,13 @@ class NormalizedAssetPricesApp:
 
         return self.fig
 
+    def _raw_prices_payload(self) -> dict[str, Any]:
+        return {
+            "timestamps_ms": (self.timestamps.astype("int64") // 10**6).tolist(),
+            "tickers": list(self.prices.tickers),
+            "prices": {t: self.prices.prices_raw[t].tolist() for t in self.prices.tickers},
+        }
+
     def setup_app(self) -> None:
         self.app = Dash(__name__)
         self.app.layout = html.Div(
@@ -105,6 +178,7 @@ class NormalizedAssetPricesApp:
                 dcc.Graph(id="plotly-normalized-asset-prices", figure=self.fig),
                 dcc.Store(id="debounced-relayout", data=None),
                 dcc.Store(id="active-interval-btn", data=self.initial_active_btn),
+                dcc.Store(id="raw-prices", data=self._raw_prices_payload()),
                 self.interval_buttons_html,
                 self.ticker_selection,
             ]
@@ -181,55 +255,116 @@ class NormalizedAssetPricesApp:
                 options = [{"label": t, "value": t} for t in tickers]
                 return options, tickers, input_ticker or "", "Enter ticker symbol..."
 
-        @self.app.callback(
+        offsets_js = json.dumps(self.interval_offsets)
+        btn_ids_js_inner = json.dumps(self.interval_buttons_ids)
+        self.app.clientside_callback(
+            f"""
+            function (...args) {{
+                {_JS_HELPERS}
+                const btnIds = {btn_ids_js_inner};
+                const offsets = {offsets_js};
+                const nBtns = btnIds.length;
+                const rawPrices = args[nBtns];
+                const currentFigure = args[nBtns + 1];
+                const ctx = window.dash_clientside.callback_context;
+                const triggeredId = ctx && ctx.triggered_id;
+                if (!triggeredId || !btnIds.includes(triggeredId) ||
+                    !rawPrices || !currentFigure) {{
+                    return [window.dash_clientside.no_update, window.dash_clientside.no_update];
+                }}
+                const tsMs = rawPrices.timestamps_ms;
+                const first = tsMs[0];
+                const last = tsMs[tsMs.length - 1];
+                const offsetDays = offsets[triggeredId];
+                let baseEndMs = last;
+                if (triggeredId !== 'btn-ytd') {{
+                    const range = _getDateRange(currentFigure.layout);
+                    if (range[1]) {{
+                        const parsed = Date.parse(range[1]);
+                        if (!isNaN(parsed)) baseEndMs = parsed;
+                    }}
+                }}
+                const startMs = Math.max(first, baseEndMs - offsetDays * 86400000);
+                const d0 = _msToDate(startMs);
+                const d1 = _msToDate(baseEndMs);
+                const newFig = _rescale(currentFigure, rawPrices, d0, d1);
+                return [newFig, triggeredId];
+            }}
+            """,
             [
-                Output("plotly-normalized-asset-prices", "figure"),
-                Output("active-interval-btn", "data"),
+                Output("plotly-normalized-asset-prices", "figure", allow_duplicate=True),
+                Output("active-interval-btn", "data", allow_duplicate=True),
             ],
+            [Input(bid, "n_clicks") for bid in self.interval_buttons_ids],
             [
-                Input("debounced-relayout", "data"),
-                Input("ticker-selection", "value"),
-                *[Input(button_id, "n_clicks") for button_id in self.interval_buttons_ids],
+                State("raw-prices", "data"),
+                State("plotly-normalized-asset-prices", "figure"),
             ],
+            prevent_initial_call=True,
+        )
+
+        tolerance_days = INTERVAL_LENGTH_TOLERANCE_DAYS
+        self.app.clientside_callback(
+            f"""
+            function (debounced, rawPrices, currentFigure, activeBtn) {{
+                {_JS_HELPERS}
+                const offsets = {offsets_js};
+                const tolerance = {tolerance_days};
+                if (!debounced || !rawPrices || !currentFigure) {{
+                    return [window.dash_clientside.no_update, window.dash_clientside.no_update];
+                }}
+                const range = _getDateRange(currentFigure.layout);
+                if (!range[0] || !range[1]) {{
+                    return [
+                        window.dash_clientside.no_update,
+                        activeBtn ? null : window.dash_clientside.no_update,
+                    ];
+                }}
+                let newActive = activeBtn;
+                if (activeBtn) {{
+                    const lengthDays =
+                        (Date.parse(range[1]) - Date.parse(range[0])) / 86400000;
+                    const expected = offsets[activeBtn];
+                    if (Math.abs(lengthDays - expected) > tolerance) {{
+                        newActive = null;
+                    }}
+                }}
+                const newFig = _rescale(currentFigure, rawPrices, range[0], range[1]);
+                return [newFig, newActive];
+            }}
+            """,
             [
+                Output("plotly-normalized-asset-prices", "figure", allow_duplicate=True),
+                Output("active-interval-btn", "data", allow_duplicate=True),
+            ],
+            Input("debounced-relayout", "data"),
+            [
+                State("raw-prices", "data"),
                 State("plotly-normalized-asset-prices", "figure"),
                 State("active-interval-btn", "data"),
             ],
             prevent_initial_call=True,
         )
-        def update_figure_after_delay(
-            relayout_data: Any,
+
+        @self.app.callback(
+            [
+                Output("plotly-normalized-asset-prices", "figure", allow_duplicate=True),
+                Output("raw-prices", "data", allow_duplicate=True),
+            ],
+            Input("ticker-selection", "value"),
+            State("plotly-normalized-asset-prices", "figure"),
+            prevent_initial_call=True,
+        )
+        def on_tickers_change(
             tickers: list[str] | None,
-            nytd: int,
-            n1mo: int,
-            n6mo: int,
-            n1y: int,
-            n2y: int,
-            n3y: int,
-            n5y: int,
-            n10y: int,
             current_figure: dict[str, Any],
-            active_btn: str | None,
-        ) -> tuple[Figure, str | None]:
+        ) -> tuple[Any, Any]:
+            tickers = tickers or []
+            if list(tickers) == self.prices.tickers:
+                return no_update, no_update
             date_range = get_date_range(current_figure["layout"])
-            triggered_id = ctx.triggered_id
-            if triggered_id in self.interval_buttons_ids:
-                offset_days = self.interval_offsets[triggered_id]
-                date_range = adjust_date_range(
-                    self.timestamps, offset_days, triggered_id, date_range
-                )
-                active_btn = triggered_id
-            elif triggered_id == "debounced-relayout" and active_btn is not None:
-                start, end = date_range
-                if start and end:
-                    length_days = (parser.parse(end) - parser.parse(start)).days
-                    expected = self.interval_offsets[active_btn]
-                    if abs(length_days - expected) > INTERVAL_LENGTH_TOLERANCE_DAYS:
-                        active_btn = None
-                else:
-                    active_btn = None
-            fig = self.update_figure(tickers or [], date_range)
-            return fig, active_btn
+            fig = self.update_figure(tickers, date_range)
+            return fig, self._raw_prices_payload()
 
     def run(self, **kwargs: Any) -> None:
         self.app.run_server(**kwargs)

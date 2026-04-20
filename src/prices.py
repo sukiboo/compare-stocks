@@ -18,6 +18,7 @@ class Prices:
     def __init__(self, initial_tickers: list[str], date_start: str) -> None:
         self.tickers = list(initial_tickers)
         self.date_range = pd.date_range(start=date_start, end=date.today(), freq="B")
+        self._yield_cache: dict[str, float] = {}
         self.get_relative_prices(initial_tickers)
 
     def __str__(self) -> str:
@@ -43,18 +44,27 @@ class Prices:
         if ticker_list:
             days_elapsed = (self.date_range - self.date_range[0]).days
             for ticker in ticker_list:
-                try:
-                    ticker_obj = yf.Ticker(ticker)
-                    if ticker_obj.dividends.empty:
-                        annual_yield = ticker_obj.info.get("yield", 0.0)
-                        if annual_yield > 0:
-                            continuous_rate = np.log(1 + annual_yield)
-                            cumulative_factor = np.exp(continuous_rate * days_elapsed / 365.25)
-                            df[ticker] = df[ticker] * cumulative_factor
-                except Exception as e:
-                    print(f"Could not adjust yield for {ticker}: {e}")
+                annual_yield = self._get_annual_yield(ticker)
+                if annual_yield > 0:
+                    continuous_rate = np.log(1 + annual_yield)
+                    cumulative_factor = np.exp(continuous_rate * days_elapsed / 365.25)
+                    df[ticker] = df[ticker] * cumulative_factor
 
         return df
+
+    def _get_annual_yield(self, ticker: str) -> float:
+        """Return cached annual yield for dividend-less securities; 0.0 if none or unknown."""
+        if ticker in self._yield_cache:
+            return self._yield_cache[ticker]
+        annual_yield = 0.0
+        try:
+            ticker_obj = yf.Ticker(ticker)
+            if ticker_obj.dividends.empty:
+                annual_yield = float(ticker_obj.info.get("yield", 0.0) or 0.0)
+        except Exception as e:
+            print(f"Could not adjust yield for {ticker}: {e}")
+        self._yield_cache[ticker] = annual_yield
+        return annual_yield
 
     def get_relative_prices(self, tickers: list[str]) -> None:
         self.prices_raw = self.get_historical_prices(tickers).reindex(columns=tickers)

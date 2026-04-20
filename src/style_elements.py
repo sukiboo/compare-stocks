@@ -150,7 +150,7 @@ def plot_prices(
         fig.add_trace(
             go.Scatter(
                 x=timestamps,
-                y=y_values,
+                y=y_values.to_numpy(),
                 customdata=customdata,
                 line=dict(width=3, color=next(colors)),
                 name=asset,
@@ -165,18 +165,6 @@ def plot_prices(
                     "</span>"
                     "<extra></extra>"
                 ),
-            )
-        )
-
-    # dummy traces to show ticks on the right
-    for _ in prices_normalized.columns:
-        fig.add_trace(
-            go.Scatter(
-                x=[],
-                y=[],
-                xaxis="x2",
-                yaxis="y3",
-                showlegend=False,
             )
         )
 
